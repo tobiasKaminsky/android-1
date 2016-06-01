@@ -382,7 +382,7 @@ public class RefreshFolderOperation extends RemoteOperation {
             updatedFile.setLastSyncDateForProperties(mCurrentSyncTime);
             if (localFile != null) {
                 updatedFile.setFileId(localFile.getFileId());
-                updatedFile.setFavorite(localFile.isFavorite());
+                updatedFile.setFavoriteStatus(localFile.getFavoriteStatus());
                 updatedFile.setLastSyncDateForData(localFile.getLastSyncDateForData());
                 updatedFile.setModificationTimestampAtLastSyncForData(
                         localFile.getModificationTimestampAtLastSyncForData()
@@ -412,7 +412,7 @@ public class RefreshFolderOperation extends RemoteOperation {
             FileStorageUtils.searchForLocalFileInDefaultPath(updatedFile, mAccount);
 
             /// prepare content synchronization for kept-in-sync files
-            if (updatedFile.isFavorite() == OCFile.FavoriteStatus.FAVORITE.getValue()) {
+            if (updatedFile.getFavoriteStatus() == OCFile.FavoriteStatus.FAVORITE.getValue()) {
                 if (updatedFile.isFolder()) {
                     SynchronizeFolderOperation operation = new SynchronizeFolderOperation(
                             mContext,
@@ -532,7 +532,7 @@ public class RefreshFolderOperation extends RemoteOperation {
     private void fetchFavoritesToSyncFromLocalData() {
         List<OCFile> children = mStorageManager.getFolderContent(mLocalFolder);
         for (OCFile child : children) {
-            if (!child.isFolder() && child.isFavorite() == OCFile.FavoriteStatus.FAVORITE.getValue()) {
+            if (!child.isFolder() && child.getFavoriteStatus() == OCFile.FavoriteStatus.FAVORITE.getValue()) {
                 SynchronizeFileOperation operation = new SynchronizeFileOperation(
                         child,
                         child,  // cheating with the remote file to get an update to server; to refactor
