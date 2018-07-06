@@ -20,8 +20,12 @@
 package com.owncloud.android.utils.glide;
 
 import android.accounts.Account;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
+import android.support.annotation.NonNull;
 
 import com.bumptech.glide.Priority;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.data.DataFetcher;
 import com.owncloud.android.MainApp;
 import com.owncloud.android.authentication.AccountUtils;
@@ -34,6 +38,7 @@ import com.owncloud.android.lib.common.utils.Log_OC;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -47,16 +52,30 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
 
     public HttpStreamFetcher(String url) {
         this.mURL = url;
-
     }
 
     @Override
-    public InputStream loadData(Priority priority) throws Exception {
-
+    public void loadData(@NonNull Priority priority, @NonNull DataCallback<? super InputStream> callback) {
         Account mAccount = AccountUtils.getCurrentOwnCloudAccount(MainApp.getAppContext());
-        OwnCloudAccount ocAccount = new OwnCloudAccount(mAccount, MainApp.getAppContext());
-        OwnCloudClient mClient = OwnCloudClientManagerFactory.getDefaultSingleton().
-                getClientFor(ocAccount, MainApp.getAppContext());
+        OwnCloudAccount ocAccount = null;
+        try {
+            ocAccount = new OwnCloudAccount(mAccount, MainApp.getAppContext());
+        } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
+            e.printStackTrace();
+        }
+        OwnCloudClient mClient = null;
+        try {
+            mClient = OwnCloudClientManagerFactory.getDefaultSingleton().
+                    getClientFor(ocAccount, MainApp.getAppContext());
+        } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
+            e.printStackTrace();
+        } catch (OperationCanceledException e) {
+            e.printStackTrace();
+        } catch (AuthenticatorException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (mClient != null) {
             GetMethod get;
@@ -66,7 +85,7 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
                 get.setRequestHeader(RemoteOperation.OCS_API_HEADER, RemoteOperation.OCS_API_HEADER_VALUE);
                 int status = mClient.executeMethod(get);
                 if (status == HttpStatus.SC_OK) {
-                    return get.getResponseBodyAsStream();
+                    callback.onDataReady(get.getResponseBodyAsStream());
                 } else {
                     mClient.exhaustResponse(get.getResponseBodyAsStream());
                 }
@@ -74,7 +93,6 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
                 Log_OC.e(TAG, e.getMessage(), e);
             }
         }
-        return null;
     }
 
     @Override
@@ -83,12 +101,19 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
     }
 
     @Override
-    public String getId() {
-        return mURL;
-    }
-
-    @Override
     public void cancel() {
         Log_OC.i(TAG,"Cancel");
+    }
+
+    @NonNull
+    @Override
+    public Class<InputStream> getDataClass() {
+        return InputStream.class;
+    }
+
+    @NonNull
+    @Override
+    public DataSource getDataSource() {
+        return DataSource.REMOTE;
     }
 }

@@ -19,8 +19,12 @@
  */
 package com.owncloud.android.utils.glide;
 
-import com.bumptech.glide.load.data.DataFetcher;
-import com.bumptech.glide.load.model.stream.StreamModelLoader;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.bumptech.glide.load.Options;
+import com.bumptech.glide.load.model.ModelLoader;
+import com.bumptech.glide.signature.ObjectKey;
 
 import java.io.InputStream;
 
@@ -28,9 +32,16 @@ import java.io.InputStream;
  * Custom Model for OwnCloudClient
  */
 
-public class CustomGlideStreamLoader implements StreamModelLoader<String> {
+public class CustomGlideStreamLoader implements ModelLoader<String, InputStream> {
+    @Nullable
     @Override
-    public DataFetcher<InputStream> getResourceFetcher(String url, int width, int height) {
-        return new HttpStreamFetcher(url);
+    public LoadData<InputStream> buildLoadData(@NonNull String url, int width, int height, @NonNull Options options) {
+        // TODO replace key with etag? and type? (avatar, thumbnail, resized image)
+        return new LoadData<>(new ObjectKey(url), new HttpStreamFetcher(url));
+    }
+
+    @Override
+    public boolean handles(@NonNull String s) {
+        return true;
     }
 }

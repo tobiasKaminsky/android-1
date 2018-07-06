@@ -32,7 +32,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -61,8 +60,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 import com.owncloud.android.R;
@@ -662,20 +659,8 @@ class ContactListAdapter extends RecyclerView.Adapter<ContactListFragment.Contac
 
             imageView.setImageDrawable(drawable);
         } else if (url != null) {
-            SimpleTarget target = new SimpleTarget<Drawable>() {
-                @Override
-                public void onResourceReady(Drawable resource, GlideAnimation glideAnimation) {
-                    imageView.setImageDrawable(resource);
-                }
-
-                @Override
-                public void onLoadFailed(Exception e, Drawable errorDrawable) {
-                    super.onLoadFailed(e, errorDrawable);
-                    imageView.setImageDrawable(errorDrawable);
-                }
-            };
-            DisplayUtils.downloadIcon(context, url, target, R.drawable.ic_user, imageView.getWidth(),
-                    imageView.getHeight());
+            // TODO to check
+            DisplayUtils.downloadImage(url, R.drawable.ic_user, imageView, context);
         }
     }
 

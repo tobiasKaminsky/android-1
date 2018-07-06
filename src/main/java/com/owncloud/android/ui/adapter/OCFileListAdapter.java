@@ -376,6 +376,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     }
                 } else {
                     // generate new thumbnail
+                    Log_OC.d("parallel", "Thumbnail " + file.getFileName() + " started");
                     if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, thumbnailView)) {
                         try {
                             final ThumbnailsCacheManager.ThumbnailGenerationTask task =

@@ -231,6 +231,12 @@ public class ThumbnailsCacheManager {
             file = (OCFile) params[0];
 
             try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            try {
                 if (account != null) {
                     OwnCloudAccount ocAccount = new OwnCloudAccount(account, MainApp.getAppContext());
                     mClient = OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount,
@@ -355,6 +361,7 @@ public class ThumbnailsCacheManager {
                     
                 }
             }
+            Log_OC.d("parallel", file.getFileName() + " finished");
         }
     }
 
@@ -426,6 +433,16 @@ public class ThumbnailsCacheManager {
         protected Bitmap doInBackground(ThumbnailGenerationTaskObject... params) {
             Bitmap thumbnail = null;
 
+            if (isCancelled()) {
+                Log_OC.d("parallel", ((OCFile) mFile).getFileName() + " cancelled");
+            }
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
             try {
                 if (mAccount != null) {
                     OwnCloudAccount ocAccount = new OwnCloudAccount(
@@ -489,6 +506,10 @@ public class ThumbnailsCacheManager {
 
             if (mAsyncTasks != null) {
                 mAsyncTasks.remove(this);
+            }
+
+            if (mFile instanceof OCFile) {
+                Log_OC.d("parallel", "Thumbnail " + ((OCFile) mFile).getFileName() + " finished");
             }
         }
 

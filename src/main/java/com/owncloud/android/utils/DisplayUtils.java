@@ -37,7 +37,6 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
-import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -54,15 +53,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 
-import com.bumptech.glide.GenericRequestBuilder;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.model.StreamEncoder;
-import com.bumptech.glide.load.resource.file.FileToStreamDecoder;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.Target;
-import com.caverock.androidsvg.SVG;
 import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
@@ -78,8 +71,8 @@ import com.owncloud.android.ui.activity.FileDisplayActivity;
 import com.owncloud.android.ui.events.MenuItemClickEvent;
 import com.owncloud.android.ui.events.SearchEvent;
 import com.owncloud.android.ui.fragment.OCFileListFragment;
-import com.owncloud.android.utils.svg.SvgDecoder;
-import com.owncloud.android.utils.svg.SvgDrawableTranscoder;
+import com.owncloud.android.utils.svg.GlideApp;
+import com.owncloud.android.utils.svg.SvgSoftwareLayerSetter;
 
 import org.greenrobot.eventbus.EventBus;
 import org.parceler.Parcels;
@@ -100,6 +93,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 
 /**
  * A helper class for UI/display related operations.
@@ -503,11 +498,11 @@ public class DisplayUtils {
         }
     }
 
-    public static void downloadIcon(Context context, String iconUrl, SimpleTarget imageView, int placeholder,
-                                    int width, int height) {
+    public static void downloadIcon(Context context, String iconUrl, SimpleTarget<Drawable> imageView, int placeholder,
+                                    int error) {
         try {
             if (iconUrl.endsWith(".svg")) {
-                downloadSVGIcon(context, iconUrl, imageView, placeholder, width, height);
+                downloadSVG(iconUrl, placeholder, error, imageView, context);
             } else {
                 downloadPNGIcon(context, iconUrl, imageView, placeholder);
             }
@@ -517,52 +512,98 @@ public class DisplayUtils {
     }
 
     private static void downloadPNGIcon(Context context, String iconUrl, SimpleTarget imageView, int placeholder) {
-        Glide
+        GlideApp
                 .with(context)
                 .load(iconUrl)
-                .centerCrop()
-                .placeholder(placeholder)
-                .error(placeholder)
-                .crossFade()
+                // .centerCrop()
+                //.placeholder(placeholder)
+                //.error(placeholder)
+                //.crossFade()
                 .into(imageView);
     }
 
-    private static void downloadSVGIcon(Context context, String iconUrl, SimpleTarget imageView, int placeholder,
-                                        int width, int height) {
-        GenericRequestBuilder<Uri, InputStream, SVG, PictureDrawable> requestBuilder = Glide.with(context)
-                .using(Glide.buildStreamModelLoader(Uri.class, context), InputStream.class)
-                .from(Uri.class)
-                .as(SVG.class)
-                .transcode(new SvgDrawableTranscoder(), PictureDrawable.class)
-                .sourceEncoder(new StreamEncoder())
-                .cacheDecoder(new FileToStreamDecoder<>(new SvgDecoder(height, width)))
-                .decoder(new SvgDecoder(height, width))
+//    public static void downloadSVGIcon(Context context, String iconUrl, SimpleTarget imageView, int placeholder,
+//                                        int width, int height) {
+//        GenericRequestBuilder<Uri, InputStream, SVG, PictureDrawable> requestBuilder = Glide.with(context)
+//                .using(Glide.buildStreamModelLoader(Uri.class, context), InputStream.class)
+//                .from(Uri.class)
+//                .as(SVG.class)
+//                .transcode(new SvgDrawableTranscoder(), PictureDrawable.class)
+//                .sourceEncoder(new StreamEncoder())
+//                .cacheDecoder(new FileToStreamDecoder<>(new SvgDecoder(height, width)))
+//                .decoder(new SvgDecoder(height, width))
+//                .placeholder(placeholder)
+//                .error(placeholder)
+//                .animate(android.R.anim.fade_in);
+//
+//
+//        Uri uri = Uri.parse(iconUrl);
+//        requestBuilder.diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//                .load(uri)
+//                .into(imageView);
+//    }
+
+    public static void downloadSVG(String url, int placeholder, int error, ImageView imageView, Context context) {
+        // todo do not create new every time
+        GlideApp.with(context)
+                .as(PictureDrawable.class)
                 .placeholder(placeholder)
-                .error(placeholder)
-                .animate(android.R.anim.fade_in);
+                .error(error)
+                .transition(withCrossFade())
+                .listener(new SvgSoftwareLayerSetter<>())
+                .load(url)
+                .into(imageView);
+    }
 
-
-        Uri uri = Uri.parse(iconUrl);
-        requestBuilder
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                .load(uri)
+    // TODO unify with ImageView
+    public static void downloadSVG(String url, int placeholder, int error, SimpleTarget<Drawable> imageView,
+                                   Context context) {
+        // todo do not create new every time
+        GlideApp.with(context)
+                //.as(PictureDrawable.class) TODO needed?
+                .load(url)
+                .placeholder(placeholder)
+                .error(error)
+                .transition(withCrossFade())
+                .listener(new SvgSoftwareLayerSetter<>())
                 .into(imageView);
     }
 
     public static Bitmap downloadImageSynchronous(Context context, String imageUrl) {
         try {
-            return Glide.with(context)
-                    .load(imageUrl)
-                    .asBitmap()
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                    .get();
+            return null;
+//            return Glide.with(context)
+//                    .load(imageUrl)
+//                    .asBitmap()
+//                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+//                    .skipMemoryCache(true)
+//                    .into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+//                    .get();
         } catch (Exception e) {
             Log_OC.e(TAG, "Could not download image " + imageUrl);
             return null;
         }
     }
+
+    public static void downloadImage(String uri, int placeholder, ImageView view, Context context) {
+        GlideApp.with(context)
+                .load(uri)
+                .placeholder(placeholder)
+                .into(view);
+    }
+
+    public static void downloadImage(String uri, int placeholder, int error, SimpleTarget<Drawable> target,
+                                     Context context) {
+        // TODO Glide: why using custom loader?
+        GlideApp.with(context)
+                //.using(new CustomGlideStreamLoader())
+                .load(uri)
+                .placeholder(placeholder)
+                .error(error)
+                .into(target);
+    }
+
+    // TODO add transition to glide: .transition(withCrossFade())
 
     public static void setupBottomBar(BottomNavigationView view, Resources resources, final Activity activity,
                                       int checkedMenuItem) {

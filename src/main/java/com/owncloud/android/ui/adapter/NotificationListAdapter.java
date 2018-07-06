@@ -20,8 +20,7 @@
 package com.owncloud.android.ui.adapter;
 
 import android.content.Context;
-import android.graphics.drawable.PictureDrawable;
-import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -30,20 +29,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.GenericRequestBuilder;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.model.StreamEncoder;
-import com.bumptech.glide.load.resource.file.FileToStreamDecoder;
-import com.caverock.androidsvg.SVG;
 import com.owncloud.android.R;
 import com.owncloud.android.lib.resources.notifications.models.Notification;
 import com.owncloud.android.utils.DisplayUtils;
-import com.owncloud.android.utils.svg.SvgDecoder;
-import com.owncloud.android.utils.svg.SvgDrawableTranscoder;
-import com.owncloud.android.utils.svg.SvgSoftwareLayerSetter;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,14 +54,15 @@ public class NotificationListAdapter extends RecyclerView.Adapter<NotificationLi
         notifyDataSetChanged();
     }
 
+    @NonNull
     @Override
-    public NotificationViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_list_item, parent, false);
         return new NotificationViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(NotificationViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
         Notification notification = mValues.get(position);
         holder.dateTime.setText(DisplayUtils.getRelativeTimestamp(context, notification.getDatetime().getTime()));
         holder.subject.setText(notification.getSubject());
@@ -80,31 +70,9 @@ public class NotificationListAdapter extends RecyclerView.Adapter<NotificationLi
 
         // Todo set proper action icon (to be clarified how to pick)
         if (!TextUtils.isEmpty(notification.getIcon())) {
-            downloadIcon(notification.getIcon(), holder.activityIcon);
+            DisplayUtils.downloadSVG(notification.getIcon(), R.drawable.ic_notification, R.drawable.ic_notification,
+                    holder.activityIcon, context);
         }
-
-    }
-
-    private void downloadIcon(String icon, ImageView itemViewType) {
-        GenericRequestBuilder<Uri, InputStream, SVG, PictureDrawable> requestBuilder = Glide.with(context)
-                .using(Glide.buildStreamModelLoader(Uri.class, context), InputStream.class)
-                .from(Uri.class)
-                .as(SVG.class)
-                .transcode(new SvgDrawableTranscoder(), PictureDrawable.class)
-                .sourceEncoder(new StreamEncoder())
-                .cacheDecoder(new FileToStreamDecoder<>(new SvgDecoder()))
-                .decoder(new SvgDecoder())
-                .placeholder(R.drawable.ic_notification)
-                .error(R.drawable.ic_notification)
-                .animate(android.R.anim.fade_in)
-                .listener(new SvgSoftwareLayerSetter<Uri>());
-
-
-        Uri uri = Uri.parse(icon);
-        requestBuilder
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                .load(uri)
-                .into(itemViewType);
     }
 
     @Override
@@ -120,10 +88,10 @@ public class NotificationListAdapter extends RecyclerView.Adapter<NotificationLi
 
         private NotificationViewHolder(View itemView) {
             super(itemView);
-            activityIcon = (ImageView) itemView.findViewById(R.id.activity_icon);
-            subject = (TextView) itemView.findViewById(R.id.activity_subject);
-            message = (TextView) itemView.findViewById(R.id.activity_message);
-            dateTime = (TextView) itemView.findViewById(R.id.activity_datetime);
+            activityIcon = itemView.findViewById(R.id.activity_icon);
+            subject = itemView.findViewById(R.id.activity_subject);
+            message = itemView.findViewById(R.id.activity_message);
+            dateTime = itemView.findViewById(R.id.activity_datetime);
         }
     }
 }

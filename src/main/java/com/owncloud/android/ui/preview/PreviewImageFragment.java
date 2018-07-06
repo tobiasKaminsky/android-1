@@ -244,6 +244,7 @@ public class PreviewImageFragment extends FileFragment {
                     }
 
                     // generate new resized image
+                    Log_OC.d("parallel", getFile().getFileName() + " started");
                     if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(getFile(), mImageView) &&
                             mContainerActivity.getStorageManager() != null) {
                         final ThumbnailsCacheManager.ResizedImageGenerationTask task =

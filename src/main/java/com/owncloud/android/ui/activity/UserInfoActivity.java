@@ -57,9 +57,8 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.gson.Gson;
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
@@ -227,16 +226,17 @@ public class UserInfoActivity extends FileActivity {
 
                 if (URLUtil.isValidUrl(background)) {
                     // background image
-                    SimpleTarget target = new SimpleTarget<Drawable>() {
+                    SimpleTarget<Drawable> target = new SimpleTarget<Drawable>() {
                         @Override
-                        public void onResourceReady(Drawable resource, GlideAnimation glideAnimation) {
+                        public void onResourceReady(@NonNull Drawable resource,
+                                                    @Nullable Transition<? super Drawable> transition) {
                             Drawable[] drawables = {new ColorDrawable(primaryColor), resource};
                             LayerDrawable layerDrawable = new LayerDrawable(drawables);
                             backgroundImageView.setImageDrawable(layerDrawable);
                         }
 
                         @Override
-                        public void onLoadFailed(Exception e, Drawable errorDrawable) {
+                        public void onLoadFailed(@Nullable Drawable errorDrawable) {
                             Drawable[] drawables = {new ColorDrawable(primaryColor),
                                     getResources().getDrawable(R.drawable.background)};
                             LayerDrawable layerDrawable = new LayerDrawable(drawables);
@@ -244,13 +244,7 @@ public class UserInfoActivity extends FileActivity {
                         }
                     };
 
-                    Glide.with(this)
-                            .load(background)
-                            .centerCrop()
-                            .placeholder(R.drawable.background)
-                            .error(R.drawable.background)
-                            .crossFade()
-                            .into(target);
+                    DisplayUtils.downloadImage(background, R.drawable.background, R.drawable.background, target, this);
                 } else {
                     // plain color
                     backgroundImageView.setImageDrawable(new ColorDrawable(primaryColor));
@@ -482,16 +476,17 @@ public class UserInfoActivity extends FileActivity {
             notifyDataSetChanged();
         }
 
+        @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
             View view = inflater.inflate(R.layout.user_info_details_table_item, parent, false);
-            ViewHolder holder = new ViewHolder(view);
-            return holder;
+
+            return new ViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             UserInfoDetailsItem item = mDisplayList.get(position);
             holder.icon.setImageResource(item.icon);
             holder.text.setText(item.text);
