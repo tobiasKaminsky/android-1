@@ -56,6 +56,7 @@ import com.owncloud.android.lib.resources.files.FileUtils;
 import com.owncloud.android.ui.interfaces.ActivityListInterface;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -240,7 +241,7 @@ public class ActivityListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 String uri = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + px + "/" + px +
                         Uri.encode(file.getRemotePath(), "/");
 
-                DisplayUtils.downloadImage(uri, placeholder, fileIcon, context);
+                DisplayUtils.downloadImage(uri, placeholder, fileIcon, GlideKey.serverThumbnail(file), context);
             } else {
                 if (isDetailView) {
                     fileIcon.setVisibility(View.GONE);

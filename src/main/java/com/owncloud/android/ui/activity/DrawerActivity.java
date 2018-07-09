@@ -92,6 +92,7 @@ import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.DrawerMenuUtil;
 import com.owncloud.android.utils.FilesSyncHelper;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 import com.owncloud.android.utils.svg.MenuSimpleTarget;
 
 import org.greenrobot.eventbus.EventBus;
@@ -1079,15 +1080,8 @@ public abstract class DrawerActivity extends ToolbarActivity implements DisplayU
                             backgroundResource = R.drawable.background;
                         }
 
-                        DisplayUtils.downloadImage(background, backgroundResource, backgroundResource, target, this);
-
-//                        Glide.with(this)
-//                                .load(background)
-//                                .centerCrop()
-//                                .placeholder(backgroundResource)
-//                                .error(backgroundResource)
-//                                .crossFade()
-//                                .into(target);
+                        DisplayUtils.downloadImage(background, backgroundResource, backgroundResource, target,
+                                GlideKey.url(background), this);
                     } else {
                         // plain color
                         setNavigationHeaderBackground(new ColorDrawable(primaryColor), navigationHeader);

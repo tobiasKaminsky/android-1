@@ -469,6 +469,7 @@ public class RefreshFolderOperation extends RemoteOperation {
             }
 
             updatedFile.setEtag(localFile.getEtag());
+            updatedFile.setEtagOnServer(remoteFile.getEtag());
 
             if (updatedFile.isFolder()) {
                 updatedFile.setFileLength(remoteFile.getFileLength());

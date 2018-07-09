@@ -227,12 +227,6 @@ public class TrashbinActivity extends FileActivity implements TrashbinActivityIn
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        trashbinListAdapter.cancelAllPendingTasks();
-    }
-
-    @Override
     public void onBackPressed() {
         trashbinPresenter.navigateUp();
     }

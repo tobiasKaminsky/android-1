@@ -23,7 +23,6 @@ package com.owncloud.android.ui.adapter;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.DataSetObserver;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -37,7 +36,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.owncloud.android.R;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.db.PreferenceManager;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.ui.interfaces.LocalFileListFragmentInterface;
@@ -45,6 +43,7 @@ import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.FileSortOrder;
 import com.owncloud.android.utils.MimeTypeUtil;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -185,7 +184,6 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
                     gridViewHolder.checkbox.setImageResource(R.drawable.ic_checkbox_blank_outline);
                 }
 
-                gridViewHolder.thumbnail.setTag(file.hashCode());
                 setThumbnail(file, gridViewHolder.thumbnail);
 
                 if (file.isDirectory()) {
@@ -229,45 +227,11 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
         if (file.isDirectory()) {
             thumbnailView.setImageDrawable(MimeTypeUtil.getDefaultFolderIcon(mContext));
         } else {
-            thumbnailView.setImageResource(R.drawable.file);
-
-            /* Cancellation needs do be checked and done before changing the drawable in fileIcon, or
-             * {@link ThumbnailsCacheManager#cancelPotentialThumbnailWork} will NEVER cancel any task.
-             */
-            boolean allowedToCreateNewThumbnail = (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, thumbnailView));
-
-
-            // get Thumbnail if file is image
-            if (MimeTypeUtil.isImage(file)) {
-                // Thumbnail in Cache?
-                Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
-                        ThumbnailsCacheManager.PREFIX_THUMBNAIL + String.valueOf(file.hashCode())
-                );
-                if (thumbnail != null) {
-                    thumbnailView.setImageBitmap(thumbnail);
-                } else {
-
-                    // generate new Thumbnail
-                    if (allowedToCreateNewThumbnail) {
-                        final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-                                new ThumbnailsCacheManager.ThumbnailGenerationTask(thumbnailView);
-                        if (MimeTypeUtil.isVideo(file)) {
-                            thumbnail = ThumbnailsCacheManager.mDefaultVideo;
-                        } else {
-                            thumbnail = ThumbnailsCacheManager.mDefaultImg;
-                        }
-                        final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
-                                new ThumbnailsCacheManager.AsyncThumbnailDrawable(
-                                        mContext.getResources(),
-                                        thumbnail,
-                                        task
-                                );
-                        thumbnailView.setImageDrawable(asyncDrawable);
-                        task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file, null));
-                        Log_OC.v(TAG, "Executing task to generate a new thumbnail");
-
-                    } // else, already being generated, don't restart it
-                }
+            if (MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file)) {
+                int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
+                // TODO add video button
+                DisplayUtils.localImage(file, placeholder, placeholder, thumbnailView, GlideKey.localFile(file),
+                        mContext);
             } else {
                 thumbnailView.setImageDrawable(MimeTypeUtil.getFileTypeIcon(null, file.getName(), mContext));
             }

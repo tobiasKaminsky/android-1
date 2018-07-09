@@ -21,12 +21,9 @@ public class NextcloudGlideModule extends AppGlideModule {
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide,
                                    @NonNull Registry registry) {
-        registry.register(SVG.class, PictureDrawable.class, new SvgDrawableTranscoder());
         registry.prepend(String.class, InputStream.class, new StringModelLoaderFactory());
-        registry.append(InputStream.class, SVG.class, new SvgDecoder());
-
-//        registry.register(SVG.class, PictureDrawable.class, new SvgDrawableTranscoder())
-//                .append(InputStream.class, SVG.class, new SvgDecoder());
+        registry.register(SVG.class, PictureDrawable.class, new SvgDrawableTranscoder())
+                .append(InputStream.class, SVG.class, new SvgDecoder());
     }
 
     // Disable manifest parsing to avoid adding similar modules twice.

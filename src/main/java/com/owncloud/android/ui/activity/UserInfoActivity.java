@@ -73,6 +73,7 @@ import com.owncloud.android.ui.events.TokenPushEvent;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.PushUtils;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -244,7 +245,8 @@ public class UserInfoActivity extends FileActivity {
                         }
                     };
 
-                    DisplayUtils.downloadImage(background, R.drawable.background, R.drawable.background, target, this);
+                    DisplayUtils.downloadImage(background, R.drawable.background, R.drawable.background, target,
+                            GlideKey.url(background), this);
                 } else {
                     // plain color
                     backgroundImageView.setImageDrawable(new ColorDrawable(primaryColor));

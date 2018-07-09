@@ -50,23 +50,23 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.style.StyleSpan;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.bumptech.glide.load.Key;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
-import com.owncloud.android.datamodel.ArbitraryDataProvider;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.lib.resources.files.SearchOperation;
-import com.owncloud.android.ui.TextDrawable;
 import com.owncloud.android.ui.activity.FileDisplayActivity;
 import com.owncloud.android.ui.events.MenuItemClickEvent;
 import com.owncloud.android.ui.events.SearchEvent;
@@ -78,6 +78,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.parceler.Parcels;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -465,37 +466,35 @@ public class DisplayUtils {
             ((View) callContext).setContentDescription(account.name);
         }
 
-        ArbitraryDataProvider arbitraryDataProvider = new ArbitraryDataProvider(context.getContentResolver());
-
-        String serverName = account.name.substring(account.name.lastIndexOf('@') + 1, account.name.length());
-        String eTag = arbitraryDataProvider.getValue(userId + "@" + serverName, ThumbnailsCacheManager.AVATAR);
-        String avatarKey = "a_" + userId + "_" + serverName + "_" + eTag;
-
-        // first show old one
-        Drawable avatar = BitmapUtils.bitmapToCircularBitmapDrawable(resources,
-                ThumbnailsCacheManager.getBitmapFromDiskCache(avatarKey));
-
-        // if no one exists, show colored icon with initial char
-        if (avatar == null) {
-            try {
-                avatar = TextDrawable.createAvatarByUserId(userId, avatarRadius);
-            } catch (Exception e) {
-                Log_OC.e(TAG, "Error calculating RGB value for active account icon.", e);
-                avatar = resources.getDrawable(R.drawable.account_circle_white);
-            }
-        }
-
-        // check for new avatar, eTag is compared, so only new one is downloaded
-        if (ThumbnailsCacheManager.cancelPotentialAvatarWork(userId, callContext)) {
-            final ThumbnailsCacheManager.AvatarGenerationTask task =
-                    new ThumbnailsCacheManager.AvatarGenerationTask(listener, callContext, storageManager,
-                            account, resources, avatarRadius, userId, serverName, context);
-
-            final ThumbnailsCacheManager.AsyncAvatarDrawable asyncDrawable =
-                    new ThumbnailsCacheManager.AsyncAvatarDrawable(resources, avatar, task);
-            listener.avatarGenerated(asyncDrawable, callContext);
-            task.execute(userId);
-        }
+//        ArbitraryDataProvider arbitraryDataProvider = new ArbitraryDataProvider(context.getContentResolver());
+//
+//        String serverName = account.name.substring(account.name.lastIndexOf('@') + 1, account.name.length());
+//        String eTag = arbitraryDataProvider.getValue(userId + "@" + serverName, ThumbnailsCacheManager.AVATAR);
+//        String avatarKey = "a_" + userId + "_" + serverName + "_" + eTag;
+//
+//        // first show old one
+//        Drawable avatar = BitmapUtils.bitmapToCircularBitmapDrawable(resources,
+//                ThumbnailsCacheManager.getBitmapFromDiskCache(avatarKey));
+//
+//        // if no one exists, show colored icon with initial char
+//        if (avatar == null) {
+//            try {
+//                avatar = TextDrawable.createAvatarByUserId(userId, avatarRadius);
+//            } catch (Exception e) {
+//                Log_OC.e(TAG, "Error calculating RGB value for active account icon.", e);
+//                avatar = resources.getDrawable(R.drawable.account_circle_white);
+//            }
+//        }
+//
+//        try {
+//            String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
+//                    .getBaseUrlForAccount(context, account);
+//            String uri = baseUrl + "/index.php/avatar/" + Uri.encode(userId) + "/" + px;
+//
+//            DisplayUtils.downloadImage(uri, R.drawable.account_circle_white, R.drawable.account_circle_white, GlideKey.avatar(), context);
+//        } catch (Exception e) {
+//            // TODO
+//        }
     }
 
     public static void downloadIcon(Context context, String iconUrl, SimpleTarget<Drawable> imageView, int placeholder,
@@ -585,20 +584,37 @@ public class DisplayUtils {
         }
     }
 
-    public static void downloadImage(String uri, int placeholder, ImageView view, Context context) {
+    public static void localImage(File file, int placeholder, int error, ImageView view, Key key, Context context) {
         GlideApp.with(context)
-                .load(uri)
+                .load(file)
                 .placeholder(placeholder)
+                .signature(key)
                 .into(view);
     }
 
-    public static void downloadImage(String uri, int placeholder, int error, SimpleTarget<Drawable> target,
+    public static void downloadImage(OCFile file, String uri, int placeholder, ImageView view, Key key,
                                      Context context) {
-        // TODO Glide: why using custom loader?
         GlideApp.with(context)
-                //.using(new CustomGlideStreamLoader())
+                .load(file)
+                .placeholder(placeholder)
+                .signature(key)
+                .into(view);
+    }
+
+    public static void downloadImage(String uri, int placeholder, ImageView view, Key key, Context context) {
+        GlideApp.with(context)
                 .load(uri)
                 .placeholder(placeholder)
+                .signature(key)
+                .into(view);
+    }
+
+    public static void downloadImage(String uri, int placeholder, int error, SimpleTarget<Drawable> target, Key key,
+                                     Context context) {
+        GlideApp.with(context)
+                .load(uri)
+                .placeholder(placeholder)
+                .signature(key)
                 .error(error)
                 .into(target);
     }
@@ -814,5 +830,35 @@ public class DisplayUtils {
                 .setAction(R.string.dismiss, v -> {
                 })
                 .show();
+    }
+
+    /**
+     * Converts size of file icon from dp to pixel
+     *
+     * @return int
+     */
+    public static int getThumbnailDimension() {
+        // Converts dp to pixel
+        Resources r = MainApp.getAppContext().getResources();
+        return Math.round(r.getDimension(R.dimen.file_icon_size_grid));
+    }
+
+    /**
+     * Converts dimension of screen as point
+     *
+     * @return Point
+     */
+    public static Point getScreenDimension() {
+        WindowManager wm = (WindowManager) MainApp.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+
+        if (wm == null) {
+            // fallback to reasonable size for resized images
+            return new Point(1024, 868);
+        } else {
+            Display display = wm.getDefaultDisplay();
+            Point point = new Point();
+            display.getSize(point);
+            return point;
+        }
     }
 }

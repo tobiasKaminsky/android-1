@@ -22,7 +22,8 @@ package com.owncloud.android.ui.adapter;
 
 import android.accounts.Account;
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,16 +34,16 @@ import android.widget.TextView;
 import com.owncloud.android.R;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager.AsyncThumbnailDrawable;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class UploaderAdapter extends SimpleAdapter {
+    private static final String TAG = UploaderAdapter.class.getSimpleName();
     
     private Context mContext;
     private Account mAccount;
@@ -74,7 +75,6 @@ public class UploaderAdapter extends SimpleAdapter {
         filename.setText(file.getFileName());
 
         ImageView fileIcon = vi.findViewById(R.id.thumbnail);
-        fileIcon.setTag(file.getFileId());
 
         TextView lastModV = vi.findViewById(R.id.last_mod);
         lastModV.setText(DisplayUtils.getRelativeTimestamp(mContext, file.getModificationTimestamp()));
@@ -97,34 +97,22 @@ public class UploaderAdapter extends SimpleAdapter {
                     file.getMountType(), mContext));
         } else {
             // get Thumbnail if file is image
-            if (MimeTypeUtil.isImage(file) && file.getRemoteId() != null) {
-                // Thumbnail in Cache?
-                Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
-                        String.valueOf(file.getRemoteId())
-                );
-                if (thumbnail != null && !file.needsUpdateThumbnail()) {
-                    fileIcon.setImageBitmap(thumbnail);
-                } else {
-                    // generate new Thumbnail
-                    if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, fileIcon)) {
-                        final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-                                new ThumbnailsCacheManager.ThumbnailGenerationTask(fileIcon, mStorageManager,
-                                        mAccount);
-                        if (thumbnail == null) {
-                            if (MimeTypeUtil.isVideo(file)) {
-                                thumbnail = ThumbnailsCacheManager.mDefaultVideo;
-                            } else {
-                                thumbnail = ThumbnailsCacheManager.mDefaultImg;
-                            }
-                        }
-                        final AsyncThumbnailDrawable asyncDrawable = new AsyncThumbnailDrawable(
-                                mContext.getResources(),
-                                thumbnail,
-                                task
-                        );
-                        fileIcon.setImageDrawable(asyncDrawable);
-                        task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file, file.getRemoteId()));
-                    }
+            if (MimeTypeUtil.isImageOrVideo(file)) {
+                int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
+
+                try {
+                    // TODO move baseUrl in constructor
+                    String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
+                            .getBaseUrlForAccount(mContext, mAccount);
+
+                    // todo move thumbnail uri to DisplayUtils
+                    int pxW = DisplayUtils.getThumbnailDimension();
+                    int pxH = DisplayUtils.getThumbnailDimension();
+                    String url = baseUrl + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
+                            Uri.encode(file.getRemotePath(), "/");
+                    DisplayUtils.downloadImage(url, placeholder, fileIcon, GlideKey.serverThumbnail(file), mContext);
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
                 }
             } else {
                 fileIcon.setImageDrawable(

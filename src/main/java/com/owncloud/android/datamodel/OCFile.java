@@ -80,6 +80,7 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
     private boolean mAvailableOffline;
 
     private String mEtag;
+    private String mEtagOnServer;
 
     private boolean mShareByLink;
     private String mPublicLink;
@@ -153,6 +154,7 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
         mLastSyncDateForProperties = source.readLong();
         mLastSyncDateForData = source.readLong();
         mEtag = source.readString();
+        mEtagOnServer = source.readString();
         mShareByLink = source.readInt() == 1;
         mPublicLink = source.readString();
         mPermissions = source.readString();
@@ -183,6 +185,7 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
         dest.writeLong(mLastSyncDateForProperties);
         dest.writeLong(mLastSyncDateForData);
         dest.writeString(mEtag);
+        dest.writeString(mEtagOnServer);
         dest.writeInt(mShareByLink ? 1 : 0);
         dest.writeString(mPublicLink);
         dest.writeString(mPermissions);
@@ -513,6 +516,7 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
         mAvailableOffline = false;
         mNeedsUpdating = false;
         mEtag = null;
+        mEtagOnServer = null;
         mShareByLink = false;
         mPublicLink = null;
         mPermissions = null;
@@ -601,6 +605,7 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
     }
 
     public boolean needsUpdateThumbnail() {
+        // TODO replace with eTag check
         return mNeedsUpdateThumbnail;
     }
 
@@ -688,6 +693,9 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
         this.mEtag = (etag != null ? etag : "");
     }
 
+    public void setEtagOnServer(String eTag) {
+        this.mEtagOnServer = eTag != null ? eTag : "";
+    }
 
     public boolean isSharedViaLink() {
         return mShareByLink;
@@ -794,5 +802,9 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
 
     public void setMountType(WebdavEntry.MountType mountType) {
         mMountType = mountType;
+    }
+
+    public String getEtagOnServer() {
+        return mEtagOnServer;
     }
 }

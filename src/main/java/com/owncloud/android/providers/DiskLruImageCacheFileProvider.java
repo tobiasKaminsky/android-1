@@ -64,8 +64,11 @@ public class DiskLruImageCacheFileProvider extends ContentProvider {
     public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String mode) throws FileNotFoundException {
         OCFile ocFile = getFile(uri);
 
+        // TODO TO CHANGE
         Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
                 String.valueOf(ThumbnailsCacheManager.PREFIX_RESIZED_IMAGE + ocFile.getRemoteId()));
+
+//        Bitmap thumbnail = GlideApp.with(getContext()).load("123").int
 
         // fallback to thumbnail
         if (thumbnail == null) {
@@ -75,7 +78,7 @@ public class DiskLruImageCacheFileProvider extends ContentProvider {
 
         // fallback to default image
         if (thumbnail == null) {
-            thumbnail = ThumbnailsCacheManager.mDefaultImg;
+            // thumbnail = ThumbnailsCacheManager.mDefaultImg;
         }
 
         // create a file to write bitmap data

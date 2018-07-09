@@ -3,17 +3,17 @@
  *
  * @author Alejandro Bautista
  * Copyright (C) 2017 Alejandro Bautista
- *
+ * <p>
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU AFFERO GENERAL PUBLIC LICENSE for more details.
- *
+ * <p>
  * You should have received a copy of the GNU Affero General Public
  * License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -48,14 +48,15 @@ import java.io.InputStream;
 public class HttpStreamFetcher implements DataFetcher<InputStream> {
 
     private static final String TAG = HttpStreamFetcher.class.getName();
-    private final String mURL;
+    private final String url;
 
     public HttpStreamFetcher(String url) {
-        this.mURL = url;
+        this.url = url;
     }
 
     @Override
     public void loadData(@NonNull Priority priority, @NonNull DataCallback<? super InputStream> callback) {
+        Log_OC.d(TAG, "load thumbnail for: " + url);
         Account mAccount = AccountUtils.getCurrentOwnCloudAccount(MainApp.getAppContext());
         OwnCloudAccount ocAccount = null;
         try {
@@ -78,9 +79,11 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
         }
 
         if (mClient != null) {
-            GetMethod get;
+            GetMethod get = null;
             try {
-                get = new GetMethod(mURL);
+//                Thread.sleep(3000);
+
+                get = new GetMethod(url);
                 get.setRequestHeader("Cookie", "nc_sameSiteCookielax=true;nc_sameSiteCookiestrict=true");
                 get.setRequestHeader(RemoteOperation.OCS_API_HEADER, RemoteOperation.OCS_API_HEADER_VALUE);
                 int status = mClient.executeMethod(get);
@@ -91,18 +94,21 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
                 }
             } catch (Exception e) {
                 Log_OC.e(TAG, e.getMessage(), e);
+            } finally {
+                if (get != null) {
+                    get.releaseConnection();
+                }
             }
         }
     }
 
-    @Override
     public void cleanup() {
-        Log_OC.i(TAG,"Cleanup");
+        Log_OC.i(TAG, "Cleanup");
     }
 
     @Override
     public void cancel() {
-        Log_OC.i(TAG,"Cancel");
+        Log_OC.i(TAG, "Cancel");
     }
 
     @NonNull

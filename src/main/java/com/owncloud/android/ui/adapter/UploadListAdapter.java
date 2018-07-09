@@ -24,7 +24,6 @@ package com.owncloud.android.ui.adapter;
 import android.accounts.Account;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.format.DateUtils;
@@ -42,7 +41,6 @@ import com.afollestad.sectionedrecyclerview.SectionedViewHolder;
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.datamodel.UploadsStorageManager;
 import com.owncloud.android.datamodel.UploadsStorageManager.UploadStatus;
 import com.owncloud.android.db.OCUpload;
@@ -53,6 +51,7 @@ import com.owncloud.android.ui.activity.FileActivity;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import java.io.File;
 import java.util.Arrays;
@@ -288,95 +287,26 @@ public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedVie
                 });
             }
         } else {
-            itemViewHolder.itemLayout.setOnClickListener(v ->
-                    onUploadItemClick(item));
+            itemViewHolder.itemLayout.setOnClickListener(v -> onUploadItemClick(item));
         }
 
-        // Set icon or thumbnail
-        itemViewHolder.thumbnail.setImageResource(R.drawable.file);
-
-        /*
-         * Cancellation needs do be checked and done before changing the drawable in fileIcon, or
-         * {@link ThumbnailsCacheManager#cancelPotentialWork} will NEVER cancel any task.
-         */
         OCFile fakeFileToCheatThumbnailsCacheManagerInterface = new OCFile(item.getRemotePath());
         fakeFileToCheatThumbnailsCacheManagerInterface.setStoragePath(item.getLocalPath());
         fakeFileToCheatThumbnailsCacheManagerInterface.setMimetype(item.getMimeType());
 
-        boolean allowedToCreateNewThumbnail = (ThumbnailsCacheManager.cancelPotentialThumbnailWork(
-                fakeFileToCheatThumbnailsCacheManagerInterface, itemViewHolder.thumbnail)
-        );
+        // todo why is this checked?
+        //        item.getUploadStatus() == UploadStatus.UPLOAD_SUCCEEDED)) {
 
-        // TODO this code is duplicated; refactor to a common place
-        if ((MimeTypeUtil.isImage(fakeFileToCheatThumbnailsCacheManagerInterface)
-                && fakeFileToCheatThumbnailsCacheManagerInterface.getRemoteId() != null &&
-                item.getUploadStatus() == UploadStatus.UPLOAD_SUCCEEDED)) {
-            // Thumbnail in Cache?
-            Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
-                    String.valueOf(fakeFileToCheatThumbnailsCacheManagerInterface.getRemoteId())
-            );
-            if (thumbnail != null && !fakeFileToCheatThumbnailsCacheManagerInterface.needsUpdateThumbnail()) {
-                itemViewHolder.thumbnail.setImageBitmap(thumbnail);
-            } else {
-                // generate new Thumbnail
-                if (allowedToCreateNewThumbnail) {
-                    final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-                            new ThumbnailsCacheManager.ThumbnailGenerationTask(
-                                    itemViewHolder.thumbnail, mParentActivity.getStorageManager(), mParentActivity.getAccount()
-                            );
-                    if (thumbnail == null) {
-                        if (MimeTypeUtil.isVideo(fakeFileToCheatThumbnailsCacheManagerInterface)) {
-                            thumbnail = ThumbnailsCacheManager.mDefaultVideo;
-                        } else {
-                            thumbnail = ThumbnailsCacheManager.mDefaultImg;
-                        }
-                    }
-                    final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
-                            new ThumbnailsCacheManager.AsyncThumbnailDrawable(
-                                    mParentActivity.getResources(),
-                                    thumbnail,
-                                    task
-                            );
-                    itemViewHolder.thumbnail.setImageDrawable(asyncDrawable);
-                    task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(
-                            fakeFileToCheatThumbnailsCacheManagerInterface, null));
-                }
-            }
+        // TODO if already uploaded, use OCFile / GlideKey remote Thumbnail
+        // else use local file generator
 
-            if ("image/png".equals(item.getMimeType())) {
-                itemViewHolder.thumbnail.setBackgroundColor(mParentActivity.getResources()
-                        .getColor(R.color.background_color));
-            }
-
-
-        } else if (MimeTypeUtil.isImage(fakeFileToCheatThumbnailsCacheManagerInterface)) {
+        if (MimeTypeUtil.isImageOrVideo(fakeFileToCheatThumbnailsCacheManagerInterface)) {
             File file = new File(item.getLocalPath());
-            // Thumbnail in Cache?
-            Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
-                    String.valueOf(file.hashCode()));
-            if (thumbnail != null) {
-                itemViewHolder.thumbnail.setImageBitmap(thumbnail);
-            } else {
-                // generate new Thumbnail
-                if (allowedToCreateNewThumbnail) {
-                    final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-                            new ThumbnailsCacheManager.ThumbnailGenerationTask(itemViewHolder.thumbnail);
 
-                    if (MimeTypeUtil.isVideo(file)) {
-                        thumbnail = ThumbnailsCacheManager.mDefaultVideo;
-                    } else {
-                        thumbnail = ThumbnailsCacheManager.mDefaultImg;
-                    }
-
-                    final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
-                            new ThumbnailsCacheManager.AsyncThumbnailDrawable(mParentActivity.getResources(), thumbnail,
-                                    task);
-
-                    itemViewHolder.thumbnail.setImageDrawable(asyncDrawable);
-                    task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file, null));
-                    Log_OC.v(TAG, "Executing task to generate a new thumbnail");
-                }
-            }
+            int placeholder = MimeTypeUtil.isImage(fakeFileToCheatThumbnailsCacheManagerInterface) ?
+                    R.drawable.file_image : R.drawable.file_movie;
+            DisplayUtils.localImage(file, placeholder, placeholder, itemViewHolder.thumbnail,
+                    GlideKey.localFile(file), mParentActivity);
 
             if ("image/png".equalsIgnoreCase(item.getMimeType())) {
                 itemViewHolder.thumbnail.setBackgroundColor(mParentActivity.getResources()

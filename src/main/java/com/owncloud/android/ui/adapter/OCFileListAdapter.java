@@ -21,13 +21,12 @@
 
 package com.owncloud.android.ui.adapter;
 
-
 import android.accounts.Account;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -45,7 +44,6 @@ import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.datamodel.VirtualFolderType;
 import com.owncloud.android.db.PreferenceManager;
 import com.owncloud.android.db.ProviderMeta;
@@ -69,6 +67,7 @@ import com.owncloud.android.utils.FileSortOrder;
 import com.owncloud.android.utils.FileStorageUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -106,8 +105,6 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private static final int VIEWTYPE_ITEM = 1;
     private static final int VIEWTYPE_IMAGE = 2;
 
-    private ArrayList<ThumbnailsCacheManager.ThumbnailGenerationTask> asyncTasks = new ArrayList<>();
-
     public OCFileListAdapter(Context context, ComponentsGetter transferServiceGetter,
                              OCFileListFragmentInterface ocFileListFragmentInterface, boolean argHideItemOptions,
                              boolean gridView) {
@@ -122,9 +119,6 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         downloaderBinder = transferServiceGetter.getFileDownloaderBinder();
         uploaderBinder = transferServiceGetter.getFileUploaderBinder();
         operationsServiceBinder = transferServiceGetter.getOperationsServiceBinder();
-
-        // initialise thumbnails cache on background thread
-        new ThumbnailsCacheManager.InitDiskCacheTask().execute();
     }
 
     public boolean isMultiSelect() {
@@ -259,7 +253,6 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
             boolean gridImage = MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file);
 
-            gridViewHolder.thumbnail.setTag(file.getFileId());
             setThumbnail(file, gridViewHolder.thumbnail);
 
             if (isCheckedFile(file)) {
@@ -362,46 +355,60 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     mContext));
         } else {
             if ((MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file)) && file.getRemoteId() != null) {
-                // Thumbnail in cache?
-                Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
-                        ThumbnailsCacheManager.PREFIX_THUMBNAIL + String.valueOf(file.getRemoteId())
-                );
-
-                if (thumbnail != null && !file.needsUpdateThumbnail()) {
-                    if (MimeTypeUtil.isVideo(file)) {
-                        Bitmap withOverlay = ThumbnailsCacheManager.addVideoOverlay(thumbnail);
-                        thumbnailView.setImageBitmap(withOverlay);
-                    } else {
-                        thumbnailView.setImageBitmap(thumbnail);
-                    }
-                } else {
+                // TODO add this somehow to glide
+//                if (!file.needsUpdateThumbnail()) {
+//                    if (MimeTypeUtil.isVideo(file)) {
+//                        Bitmap withOverlay = ThumbnailsCacheManager.addVideoOverlay(thumbnail);
+//                        thumbnailView.setImageBitmap(withOverlay);
+//                    } else {
+//                        thumbnailView.setImageBitmap(thumbnail);
+//                    }
+//                } else {
                     // generate new thumbnail
                     Log_OC.d("parallel", "Thumbnail " + file.getFileName() + " started");
-                    if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, thumbnailView)) {
-                        try {
-                            final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-                                    new ThumbnailsCacheManager.ThumbnailGenerationTask(thumbnailView, mStorageManager,
-                                            mAccount, asyncTasks);
+                int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
+                int pxW = DisplayUtils.getThumbnailDimension();
+                int pxH = DisplayUtils.getThumbnailDimension();
+                    
+                try {
+                    // TODO move baseUrl in constructor
+                    String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
+                            .getBaseUrlForAccount(mContext, mAccount);
 
-                            if (thumbnail == null) {
-                                if (MimeTypeUtil.isVideo(file)) {
-                                    thumbnail = ThumbnailsCacheManager.mDefaultVideo;
-                                } else {
-                                    thumbnail = ThumbnailsCacheManager.mDefaultImg;
-                                }
-                            }
-                            final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
-                                    new ThumbnailsCacheManager.AsyncThumbnailDrawable(mContext.getResources(),
-                                            thumbnail, task);
-                            thumbnailView.setImageDrawable(asyncDrawable);
-                            asyncTasks.add(task);
-                            task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file,
-                                    file.getRemoteId()));
-                        } catch (IllegalArgumentException e) {
-                            Log_OC.d(TAG, "ThumbnailGenerationTask : " + e.getMessage());
-                        }
-                    }
+                    String url = baseUrl + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
+                            Uri.encode(file.getRemotePath(), "/");
+                    DisplayUtils.downloadImage(url, placeholder, thumbnailView, GlideKey.serverThumbnail(file),
+                            mContext);
+                } catch (Exception e) {
+                    Log_OC.e(TAG, e.getMessage());
+                    // do something
                 }
+
+//                    if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, thumbnailView)) {
+//                        try {
+//                            final ThumbnailsCacheManager.ThumbnailGenerationTask task =
+//                                    new ThumbnailsCacheManager.ThumbnailGenerationTask(thumbnailView, mStorageManager,
+//                                            mAccount, asyncTasks);
+//
+//                            if (thumbnail == null) {
+//                                if (MimeTypeUtil.isVideo(file)) {
+//                                    thumbnail = ThumbnailsCacheManager.mDefaultVideo;
+//                                } else {
+//                                    thumbnail = ThumbnailsCacheManager.mDefaultImg;
+//                                }
+//                            }
+//                            final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
+//                                    new ThumbnailsCacheManager.AsyncThumbnailDrawable(mContext.getResources(),
+//                                            thumbnail, task);
+//                            thumbnailView.setImageDrawable(asyncDrawable);
+//                            asyncTasks.add(task);
+//                            task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file,
+//                                    file.getRemoteId()));
+//                        } catch (IllegalArgumentException e) {
+//                            Log_OC.d(TAG, "ThumbnailGenerationTask : " + e.getMessage());
+//                        }
+//                    }
+//                }
 
                 if (file.getMimeType().equalsIgnoreCase("image/png")) {
                     thumbnailView.setBackgroundColor(mContext.getResources().getColor(R.color.background_color));
@@ -765,20 +772,6 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
 
         return ret;
-    }
-
-    public void cancelAllPendingTasks() {
-        for (ThumbnailsCacheManager.ThumbnailGenerationTask task : asyncTasks) {
-            if (task != null) {
-                task.cancel(true);
-                if (task.getGetMethod() != null) {
-                    Log_OC.d(TAG, "cancel: abort get method directly");
-                    task.getGetMethod().abort();
-                }
-            }
-        }
-
-        asyncTasks.clear();
     }
 
     public void setGridView(boolean bool) {

@@ -42,7 +42,6 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
@@ -571,34 +570,36 @@ public class FileDetailFragment extends FileFragment implements OnClickListener 
                 if (thumbnail != null) {
                     activity.setPreviewImageBitmap(thumbnail);
                 } else {
-                    thumbnail = ThumbnailsCacheManager.mDefaultImg;
+                    // TODO
+                    // thumbnail = ThumbnailsCacheManager.mDefaultImg;
                 }
 
                 // generate new resized image
-                if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(getFile(), activity.getPreviewImageView()) &&
-                        mContainerActivity.getStorageManager() != null) {
-                    final ThumbnailsCacheManager.ResizedImageGenerationTask task =
-                            new ThumbnailsCacheManager.ResizedImageGenerationTask(FileDetailFragment.this,
-                                    activity.getPreviewImageView(),
-                                    mContainerActivity.getStorageManager(),
-                                    mContainerActivity.getStorageManager().getAccount());
-
-                    if (resizedImage == null) {
-                        resizedImage = thumbnail;
-                    }
-
-                    final ThumbnailsCacheManager.AsyncResizedImageDrawable asyncDrawable =
-                            new ThumbnailsCacheManager.AsyncResizedImageDrawable(
-                                    MainApp.getAppContext().getResources(),
-                                    resizedImage,
-                                    task
-                            );
-
-                    activity.setPreviewImageDrawable(asyncDrawable);
-                    activatePreviewImage();
-                    previewLoaded = true;
-                    task.execute(getFile());
-                }
+                // TODO replace
+//                if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(getFile(), activity.getPreviewImageView()) &&
+//                        mContainerActivity.getStorageManager() != null) {
+//                    final ThumbnailsCacheManager.ResizedImageGenerationTask task =
+//                            new ThumbnailsCacheManager.ResizedImageGenerationTask(FileDetailFragment.this,
+//                                    activity.getPreviewImageView(),
+//                                    mContainerActivity.getStorageManager(),
+//                                    mContainerActivity.getStorageManager().getAccount());
+//
+//                    if (resizedImage == null) {
+//                        resizedImage = thumbnail;
+//                    }
+//
+//                    final ThumbnailsCacheManager.AsyncResizedImageDrawable asyncDrawable =
+//                            new ThumbnailsCacheManager.AsyncResizedImageDrawable(
+//                                    MainApp.getAppContext().getResources(),
+//                                    resizedImage,
+//                                    task
+//                            );
+//
+//                    activity.setPreviewImageDrawable(asyncDrawable);
+//                    activatePreviewImage();
+//                    previewLoaded = true;
+//                    task.execute(getFile());
+//                }
             }
         }
     }

@@ -734,6 +734,7 @@ public class FileContentProvider extends ContentProvider {
                 + ProviderTableMeta.FILE_LAST_SYNC_DATE_FOR_DATA + INTEGER
                 + ProviderTableMeta.FILE_MODIFIED_AT_LAST_SYNC_FOR_DATA + INTEGER
                 + ProviderTableMeta.FILE_ETAG + TEXT
+                + ProviderTableMeta.FILE_ETAG_ON_SERVER + TEXT
                 + ProviderTableMeta.FILE_SHARED_VIA_LINK + INTEGER
                 + ProviderTableMeta.FILE_PUBLIC_LINK + TEXT
                 + ProviderTableMeta.FILE_PERMISSIONS + " TEXT null,"
@@ -1693,6 +1694,24 @@ public class FileContentProvider extends ContentProvider {
                 try {
                     db.execSQL(ALTER_TABLE + ProviderTableMeta.OCSHARES_TABLE_NAME +
                             ADD_COLUMN + ProviderTableMeta.OCSHARES_IS_PASSWORD_PROTECTED + " INTEGER "); // boolean
+
+                    upgraded = true;
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+            }
+
+            if (!upgraded) {
+                Log_OC.i(SQL, String.format(Locale.ENGLISH, UPGRADE_VERSION_MSG, oldVersion, newVersion));
+            }
+
+            if (oldVersion < 33 && newVersion >= 33) {
+                Log_OC.i(SQL, "Entering in the #33 add eTagOnServer");
+                db.beginTransaction();
+                try {
+                    db.execSQL(ALTER_TABLE + ProviderTableMeta.FILE_TABLE_NAME +
+                            ADD_COLUMN + ProviderTableMeta.FILE_ETAG_ON_SERVER + " TEXT ");
 
                     upgraded = true;
                     db.setTransactionSuccessful();

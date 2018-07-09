@@ -76,6 +76,7 @@ import com.owncloud.android.utils.BitmapUtils;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.PermissionUtil;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -659,8 +660,7 @@ class ContactListAdapter extends RecyclerView.Adapter<ContactListFragment.Contac
 
             imageView.setImageDrawable(drawable);
         } else if (url != null) {
-            // TODO to check
-            DisplayUtils.downloadImage(url, R.drawable.ic_user, imageView, context);
+            DisplayUtils.downloadImage(url, R.drawable.ic_user, imageView, GlideKey.url(url), context);
         }
     }
 

@@ -277,6 +277,10 @@ public class MimeTypeUtil {
                 || MimeTypeUtil.isImage(getMimeTypeFromPath(file.getRemotePath())));
     }
 
+    public static boolean isImageOrVideo(ServerFileInterface file) {
+        return isImage(file) || isVideo(file);
+    }
+
     /**
      * @param file the file to be analyzed
      * @return 'True' if the file is simple text (e.g. not application-dependent, like .doc or .docx)
