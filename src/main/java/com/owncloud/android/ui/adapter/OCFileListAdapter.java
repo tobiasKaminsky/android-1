@@ -26,7 +26,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -49,6 +48,7 @@ import com.owncloud.android.db.PreferenceManager;
 import com.owncloud.android.db.ProviderMeta;
 import com.owncloud.android.files.services.FileDownloader;
 import com.owncloud.android.files.services.FileUploader;
+import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.common.utils.Log_OC;
@@ -86,6 +86,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private final FileUploader.FileUploaderBinder uploaderBinder;
     private final OperationsService.OperationsServiceBinder operationsServiceBinder;
     private Context mContext;
+    private OwnCloudClient client;
     private List<OCFile> mFiles = new ArrayList<>();
     private List<OCFile> mFilesAll = new ArrayList<>();
     private boolean mHideItemOptions;
@@ -105,12 +106,13 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private static final int VIEWTYPE_ITEM = 1;
     private static final int VIEWTYPE_IMAGE = 2;
 
-    public OCFileListAdapter(Context context, ComponentsGetter transferServiceGetter,
+    public OCFileListAdapter(Context context, OwnCloudClient client, ComponentsGetter transferServiceGetter,
                              OCFileListFragmentInterface ocFileListFragmentInterface, boolean argHideItemOptions,
                              boolean gridView) {
 
         this.ocFileListFragmentInterface = ocFileListFragmentInterface;
         mContext = context;
+        this.client = client;
         mAccount = AccountUtils.getCurrentOwnCloudAccount(mContext);
         mHideItemOptions = argHideItemOptions;
         this.gridView = gridView;
@@ -366,19 +368,10 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 //                } else {
                     // generate new thumbnail
                     Log_OC.d("parallel", "Thumbnail " + file.getFileName() + " started");
-                int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
-                int pxW = DisplayUtils.getThumbnailDimension();
-                int pxH = DisplayUtils.getThumbnailDimension();
-                    
-                try {
-                    // TODO move baseUrl in constructor
-                    String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
-                            .getBaseUrlForAccount(mContext, mAccount);
 
-                    String url = baseUrl + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
-                            Uri.encode(file.getRemotePath(), "/");
-                    DisplayUtils.downloadImage(url, placeholder, thumbnailView, GlideKey.serverThumbnail(file),
-                            mContext);
+
+                try {
+                    DisplayUtils.downloadImage(file, thumbnailView, GlideKey.serverThumbnail(file), client, mContext);
                 } catch (Exception e) {
                     Log_OC.e(TAG, e.getMessage());
                     // do something

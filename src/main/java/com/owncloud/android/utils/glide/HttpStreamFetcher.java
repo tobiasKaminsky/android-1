@@ -19,26 +19,17 @@
  */
 package com.owncloud.android.utils.glide;
 
-import android.accounts.Account;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.support.annotation.NonNull;
 
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.data.DataFetcher;
-import com.owncloud.android.MainApp;
-import com.owncloud.android.authentication.AccountUtils;
-import com.owncloud.android.lib.common.OwnCloudAccount;
-import com.owncloud.android.lib.common.OwnCloudClient;
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.utils.Log_OC;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -48,56 +39,38 @@ import java.io.InputStream;
 public class HttpStreamFetcher implements DataFetcher<InputStream> {
 
     private static final String TAG = HttpStreamFetcher.class.getName();
-    private final String url;
+    private final GlideContainer container;
+
+    public HttpStreamFetcher(GlideContainer container) {
+        this.container = container;
+    }
 
     public HttpStreamFetcher(String url) {
-        this.url = url;
+        Log_OC.e(TAG, "wrong constructor");
+        container = null;
+        // TODO remove, dummy
     }
 
     @Override
     public void loadData(@NonNull Priority priority, @NonNull DataCallback<? super InputStream> callback) {
-        Log_OC.d(TAG, "load thumbnail for: " + url);
-        Account mAccount = AccountUtils.getCurrentOwnCloudAccount(MainApp.getAppContext());
-        OwnCloudAccount ocAccount = null;
-        try {
-            ocAccount = new OwnCloudAccount(mAccount, MainApp.getAppContext());
-        } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
-            e.printStackTrace();
-        }
-        OwnCloudClient mClient = null;
-        try {
-            mClient = OwnCloudClientManagerFactory.getDefaultSingleton().
-                    getClientFor(ocAccount, MainApp.getAppContext());
-        } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
-            e.printStackTrace();
-        } catch (OperationCanceledException e) {
-            e.printStackTrace();
-        } catch (AuthenticatorException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Log_OC.d(TAG, "load thumbnail for: " + container.url);
 
-        if (mClient != null) {
-            GetMethod get = null;
-            try {
-//                Thread.sleep(3000);
-
-                get = new GetMethod(url);
-                get.setRequestHeader("Cookie", "nc_sameSiteCookielax=true;nc_sameSiteCookiestrict=true");
-                get.setRequestHeader(RemoteOperation.OCS_API_HEADER, RemoteOperation.OCS_API_HEADER_VALUE);
-                int status = mClient.executeMethod(get);
-                if (status == HttpStatus.SC_OK) {
-                    callback.onDataReady(get.getResponseBodyAsStream());
-                } else {
-                    mClient.exhaustResponse(get.getResponseBodyAsStream());
-                }
-            } catch (Exception e) {
-                Log_OC.e(TAG, e.getMessage(), e);
-            } finally {
-                if (get != null) {
-                    get.releaseConnection();
-                }
+        GetMethod get = null;
+        try {
+            get = new GetMethod(container.url);
+            get.setRequestHeader("Cookie", "nc_sameSiteCookielax=true;nc_sameSiteCookiestrict=true");
+            get.setRequestHeader(RemoteOperation.OCS_API_HEADER, RemoteOperation.OCS_API_HEADER_VALUE);
+            int status = container.client.executeMethod(get);
+            if (status == HttpStatus.SC_OK) {
+                callback.onDataReady(get.getResponseBodyAsStream());
+            } else {
+                container.client.exhaustResponse(get.getResponseBodyAsStream());
+            }
+        } catch (Exception e) {
+            Log_OC.e(TAG, e.getMessage(), e);
+        } finally {
+            if (get != null) {
+                get.releaseConnection();
             }
         }
     }

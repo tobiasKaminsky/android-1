@@ -37,6 +37,7 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -65,13 +66,16 @@ import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
 import com.owncloud.android.lib.common.OwnCloudAccount;
+import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.lib.resources.files.SearchOperation;
 import com.owncloud.android.ui.activity.FileDisplayActivity;
 import com.owncloud.android.ui.events.MenuItemClickEvent;
 import com.owncloud.android.ui.events.SearchEvent;
 import com.owncloud.android.ui.fragment.OCFileListFragment;
-import com.owncloud.android.utils.svg.GlideApp;
+import com.owncloud.android.utils.glide.GlideApp;
+import com.owncloud.android.utils.glide.GlideContainer;
+import com.owncloud.android.utils.glide.GlideKey;
 import com.owncloud.android.utils.svg.SvgSoftwareLayerSetter;
 
 import org.greenrobot.eventbus.EventBus;
@@ -598,6 +602,28 @@ public class DisplayUtils {
                 .load(file)
                 .placeholder(placeholder)
                 .signature(key)
+                .into(view);
+    }
+
+    public static void downloadImage(OCFile file, ImageView view, Key key, OwnCloudClient client, Context context) {
+        GlideContainer container = new GlideContainer();
+
+        int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
+        int pxW = DisplayUtils.getThumbnailDimension();
+        int pxH = DisplayUtils.getThumbnailDimension();
+
+        String url = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
+                Uri.encode(file.getRemotePath(), "/");
+
+        container.file = file;
+        container.url = url;
+        container.client = client;
+        container.key = GlideKey.serverThumbnail(file);
+
+        GlideApp.with(context)
+                .load(container)
+                .placeholder(placeholder)
+//                .signature(key)
                 .into(view);
     }
 
