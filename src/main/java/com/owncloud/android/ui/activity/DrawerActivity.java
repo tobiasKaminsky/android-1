@@ -446,8 +446,16 @@ public abstract class DrawerActivity extends ToolbarActivity implements DisplayU
                 startActivity(settingsIntent);
                 break;
             case R.id.nav_participate:
-                Intent participateIntent = new Intent(getApplicationContext(), ParticipateActivity.class);
-                startActivity(participateIntent);
+                Intent externalWebViewIntent = new Intent(getApplicationContext(),
+                        ExternalSiteWebView.class);
+
+                String url = "https://collabora-test.nextcloud.com/apps/richdocuments/direct/SxGVUwtwikCyXWRoVECStVZAeKWDt9ULWqDgw3dyaW5d2ZevHcjcUGcFuYtfGeBu";
+
+                externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
+                externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, url);
+                externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, true);
+                externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_MENU_ITEM_ID, menuItem.getItemId());
+                startActivity(externalWebViewIntent);
                 break;
             case R.id.nav_logout:
                 mCheckedMenuItem = -1;
