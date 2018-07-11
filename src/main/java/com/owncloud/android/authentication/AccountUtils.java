@@ -31,6 +31,9 @@ import android.support.annotation.Nullable;
 import com.owncloud.android.MainApp;
 import com.owncloud.android.datamodel.ArbitraryDataProvider;
 import com.owncloud.android.datamodel.FileDataStorageManager;
+import com.owncloud.android.lib.common.OwnCloudAccount;
+import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.accounts.AccountUtils.Constants;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.common.utils.Log_OC;
@@ -213,5 +216,17 @@ public class AccountUtils {
 
     public static boolean hasSearchSupport(Account account) {
         return getServerVersion(account).isSearchSupported();
+    }
+
+    public static OwnCloudClient getClientForCurrentAccount(Context context) {
+        try {
+            Account currentAccount = AccountUtils.getCurrentOwnCloudAccount(context);
+            OwnCloudAccount ocAccount = new OwnCloudAccount(currentAccount, context);
+            return OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount, context);
+        } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
+            throw new IllegalStateException("Account not found");
+        } catch (Exception e) {
+            throw new IllegalStateException("Client could not be instantiated");
+        }
     }
 }

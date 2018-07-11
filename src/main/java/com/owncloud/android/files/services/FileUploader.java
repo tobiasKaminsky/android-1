@@ -1122,7 +1122,7 @@ public class FileUploader extends Service
             }
 
             // generate new Thumbnail
-            // TODO replace
+            // TODO glide replace locale file with ocFile key
 //            final ThumbnailsCacheManager.ThumbnailGenerationTask task =
 //                    new ThumbnailsCacheManager.ThumbnailGenerationTask(mStorageManager, mCurrentAccount);
 //

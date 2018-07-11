@@ -1,4 +1,4 @@
-/**
+/*
  *   ownCloud Android client application
  *
  *   @author Tobias Kaminsky
@@ -22,8 +22,6 @@ package com.owncloud.android.ui.adapter;
 
 import android.accounts.Account;
 import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,11 +30,11 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.owncloud.android.R;
-import com.owncloud.android.datamodel.FileDataStorageManager;
+import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.OCFile;
+import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
-import com.owncloud.android.utils.glide.GlideKey;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,18 +45,17 @@ public class UploaderAdapter extends SimpleAdapter {
     
     private Context mContext;
     private Account mAccount;
-    private FileDataStorageManager mStorageManager;
     private LayoutInflater inflater;
+    private OwnCloudClient client;
 
     public UploaderAdapter(Context context,
                            List<? extends Map<String, ?>> data, int resource, String[] from,
-                           int[] to, FileDataStorageManager storageManager, Account account) {
+                           int[] to, Account account) {
         super(context, data, resource, from, to);
         mAccount = account;
-        mStorageManager = storageManager;
         mContext = context;
-        inflater = (LayoutInflater) mContext
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        client = AccountUtils.getClientForCurrentAccount(context);
     }
 
     @Override
@@ -98,22 +95,7 @@ public class UploaderAdapter extends SimpleAdapter {
         } else {
             // get Thumbnail if file is image
             if (MimeTypeUtil.isImageOrVideo(file)) {
-                int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
-
-                try {
-                    // TODO move baseUrl in constructor
-                    String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
-                            .getBaseUrlForAccount(mContext, mAccount);
-
-                    // todo move thumbnail uri to DisplayUtils
-                    int pxW = DisplayUtils.getThumbnailDimension();
-                    int pxH = DisplayUtils.getThumbnailDimension();
-                    String url = baseUrl + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
-                            Uri.encode(file.getRemotePath(), "/");
-                    DisplayUtils.downloadImage(url, placeholder, fileIcon, GlideKey.serverThumbnail(file), mContext);
-                } catch (Exception e) {
-                    Log.e(TAG, e.getMessage());
-                }
+                DisplayUtils.downloadThumbnail(file, fileIcon, client, mContext);
             } else {
                 fileIcon.setImageDrawable(
                         MimeTypeUtil.getFileTypeIcon(file.getMimeType(), file.getFileName(), mAccount, mContext)
@@ -123,6 +105,4 @@ public class UploaderAdapter extends SimpleAdapter {
 
         return vi;
     }
-
-
 }

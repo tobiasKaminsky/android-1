@@ -762,7 +762,7 @@ public class ReceiveExternalFilesActivity extends FileActivity
                         R.layout.uploader_list_item_layout,
                         new String[]{"dirname"},
                         new int[]{R.id.filename},
-                        getStorageManager(), getAccount());
+                        getAccount());
 
                 mListView.setAdapter(sa);
             }

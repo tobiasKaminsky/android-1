@@ -7,12 +7,12 @@ import com.owncloud.android.lib.resources.files.TrashbinFile;
 import java.io.File;
 
 public class GlideKey {
-    private static final String THUMBNAIL = "THUMBNAIL";
-    private static final String RESIZED_IMAGE = "RESIZED_IMAGE";
+    private static final String THUMBNAIL = "THUMBNAIL_";
+    private static final String RESIZED_IMAGE = "RESIZED_IMAGE_";
     private static final String AVATAR = "AVATAR";
 
     public static ObjectKey serverThumbnail(OCFile file) {
-        return new ObjectKey(THUMBNAIL + file.getEtagOnServer());
+        return new ObjectKey(THUMBNAIL + file.getEtagOnServer()); // TODO if null, show placeholder
     }
 
     public static ObjectKey resizedImage(OCFile file) {

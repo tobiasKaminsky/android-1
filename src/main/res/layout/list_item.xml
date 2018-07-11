@@ -53,6 +53,15 @@
                 android:src="@drawable/folder" />
 
             <ImageView
+                android:id="@+id/play_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                android:contentDescription="@string/thumbnail"
+                android:src="@drawable/ic_play_arrow"/>
+
+            <ImageView
                 android:id="@+id/favorite_action"
                 android:layout_width="@dimen/list_item_favorite_action_layout_width"
                 android:layout_height="@dimen/list_item_favorite_action_layout_height"

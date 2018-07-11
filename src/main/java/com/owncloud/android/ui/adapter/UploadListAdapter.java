@@ -294,10 +294,10 @@ public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedVie
         fakeFileToCheatThumbnailsCacheManagerInterface.setStoragePath(item.getLocalPath());
         fakeFileToCheatThumbnailsCacheManagerInterface.setMimetype(item.getMimeType());
 
-        // todo why is this checked?
+        // todo glide why is this checked?
         //        item.getUploadStatus() == UploadStatus.UPLOAD_SUCCEEDED)) {
 
-        // TODO if already uploaded, use OCFile / GlideKey remote Thumbnail
+        // TODO glide if already uploaded, use OCFile / GlideKey remote Thumbnail
         // else use local file generator
 
         if (MimeTypeUtil.isImageOrVideo(fakeFileToCheatThumbnailsCacheManagerInterface)) {

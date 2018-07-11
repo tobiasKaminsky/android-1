@@ -67,7 +67,6 @@ import com.owncloud.android.utils.FileSortOrder;
 import com.owncloud.android.utils.FileStorageUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
 import com.owncloud.android.utils.ThemeUtils;
-import com.owncloud.android.utils.glide.GlideKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -257,6 +256,12 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
             setThumbnail(file, gridViewHolder.thumbnail);
 
+            if (MimeTypeUtil.isVideo(file)) {
+                gridViewHolder.playIcon.setVisibility(View.VISIBLE);
+            } else {
+                gridViewHolder.playIcon.setVisibility(View.GONE);
+            }
+
             if (isCheckedFile(file)) {
                 gridViewHolder.itemLayout.setBackgroundColor(mContext.getResources()
                         .getColor(R.color.selected_item_background));
@@ -357,7 +362,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     mContext));
         } else {
             if ((MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file)) && file.getRemoteId() != null) {
-                // TODO add this somehow to glide
+                // TODO glide add this somehow to glide
 //                if (!file.needsUpdateThumbnail()) {
 //                    if (MimeTypeUtil.isVideo(file)) {
 //                        Bitmap withOverlay = ThumbnailsCacheManager.addVideoOverlay(thumbnail);
@@ -371,7 +376,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
 
                 try {
-                    DisplayUtils.downloadImage(file, thumbnailView, GlideKey.serverThumbnail(file), client, mContext);
+                    DisplayUtils.downloadThumbnail(file, thumbnailView, client, mContext);
                 } catch (Exception e) {
                     Log_OC.e(TAG, e.getMessage());
                     // do something
@@ -802,6 +807,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         private final ImageView localFileIndicator;
         private final ImageView shared;
         private final ImageView checkbox;
+        private final ImageView playIcon;
         private final LinearLayout itemLayout;
 
         private OCFileListGridImageViewHolder(View itemView) {
@@ -813,6 +819,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             localFileIndicator = itemView.findViewById(R.id.localFileIndicator);
             shared = itemView.findViewById(R.id.sharedIcon);
             checkbox = itemView.findViewById(R.id.custom_checkbox);
+            playIcon = itemView.findViewById(R.id.play_icon);
             itemLayout = itemView.findViewById(R.id.ListItemLayout);
         }
     }

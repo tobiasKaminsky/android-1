@@ -98,8 +98,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
+import java.util.concurrent.ExecutionException;
 
 /**
  * A helper class for UI/display related operations.
@@ -470,6 +469,8 @@ public class DisplayUtils {
             ((View) callContext).setContentDescription(account.name);
         }
 
+        // TODO glide avatare
+
 //        ArbitraryDataProvider arbitraryDataProvider = new ArbitraryDataProvider(context.getContentResolver());
 //
 //        String serverName = account.name.substring(account.name.lastIndexOf('@') + 1, account.name.length());
@@ -497,7 +498,7 @@ public class DisplayUtils {
 //
 //            DisplayUtils.downloadImage(uri, R.drawable.account_circle_white, R.drawable.account_circle_white, GlideKey.avatar(), context);
 //        } catch (Exception e) {
-//            // TODO
+//            // TODO glide 
 //        }
     }
 
@@ -514,66 +515,43 @@ public class DisplayUtils {
         }
     }
 
-    private static void downloadPNGIcon(Context context, String iconUrl, SimpleTarget imageView, int placeholder) {
-        GlideApp
-                .with(context)
+    private static void downloadPNGIcon(Context context, String iconUrl, SimpleTarget<Drawable> imageView,
+                                        int placeholder) {
+        GlideApp.with(context)
                 .load(iconUrl)
-                // .centerCrop()
-                //.placeholder(placeholder)
-                //.error(placeholder)
-                //.crossFade()
+                .centerCrop()
+                .placeholder(placeholder)
+                .error(placeholder)
                 .into(imageView);
     }
 
-//    public static void downloadSVGIcon(Context context, String iconUrl, SimpleTarget imageView, int placeholder,
-//                                        int width, int height) {
-//        GenericRequestBuilder<Uri, InputStream, SVG, PictureDrawable> requestBuilder = Glide.with(context)
-//                .using(Glide.buildStreamModelLoader(Uri.class, context), InputStream.class)
-//                .from(Uri.class)
-//                .as(SVG.class)
-//                .transcode(new SvgDrawableTranscoder(), PictureDrawable.class)
-//                .sourceEncoder(new StreamEncoder())
-//                .cacheDecoder(new FileToStreamDecoder<>(new SvgDecoder(height, width)))
-//                .decoder(new SvgDecoder(height, width))
-//                .placeholder(placeholder)
-//                .error(placeholder)
-//                .animate(android.R.anim.fade_in);
-//
-//
-//        Uri uri = Uri.parse(iconUrl);
-//        requestBuilder.diskCacheStrategy(DiskCacheStrategy.SOURCE)
-//                .load(uri)
-//                .into(imageView);
-//    }
-
     public static void downloadSVG(String url, int placeholder, int error, ImageView imageView, Context context) {
-        // todo do not create new every time
+        // todo glide do not create new every time
         GlideApp.with(context)
                 .as(PictureDrawable.class)
                 .placeholder(placeholder)
                 .error(error)
-                .transition(withCrossFade())
                 .listener(new SvgSoftwareLayerSetter<>())
                 .load(url)
                 .into(imageView);
     }
 
-    // TODO unify with ImageView
+    // TODO glide unify with ImageView
     public static void downloadSVG(String url, int placeholder, int error, SimpleTarget<Drawable> imageView,
                                    Context context) {
-        // todo do not create new every time
+        // todo glide do not create new every time
         GlideApp.with(context)
-                //.as(PictureDrawable.class) TODO needed?
+                // .as(PictureDrawable.class) // TODO glide needed?
                 .load(url)
                 .placeholder(placeholder)
                 .error(error)
-                .transition(withCrossFade())
-                .listener(new SvgSoftwareLayerSetter<>())
+                // .listener(new SvgSoftwareLayerSetter<>())
                 .into(imageView);
     }
 
     public static Bitmap downloadImageSynchronous(Context context, String imageUrl) {
         try {
+            // TODO glide
             return null;
 //            return Glide.with(context)
 //                    .load(imageUrl)
@@ -592,46 +570,41 @@ public class DisplayUtils {
         GlideApp.with(context)
                 .load(file)
                 .placeholder(placeholder)
+                .error(error)
                 .signature(key)
                 .into(view);
     }
 
-    public static void downloadImage(OCFile file, String uri, int placeholder, ImageView view, Key key,
-                                     Context context) {
-        GlideApp.with(context)
-                .load(file)
-                .placeholder(placeholder)
-                .signature(key)
-                .into(view);
-    }
-
-    public static void downloadImage(OCFile file, ImageView view, Key key, OwnCloudClient client, Context context) {
+    public static void downloadThumbnail(OCFile file, ImageView view, OwnCloudClient client, Context context) {
         GlideContainer container = new GlideContainer();
 
         int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
         int pxW = DisplayUtils.getThumbnailDimension();
         int pxH = DisplayUtils.getThumbnailDimension();
 
-        String url = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
+        container.url = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
                 Uri.encode(file.getRemotePath(), "/");
-
-        container.file = file;
-        container.url = url;
         container.client = client;
         container.key = GlideKey.serverThumbnail(file);
 
         GlideApp.with(context)
                 .load(container)
                 .placeholder(placeholder)
-//                .signature(key)
                 .into(view);
     }
 
-    public static void downloadImage(String uri, int placeholder, ImageView view, Key key, Context context) {
+    public static void downloadImage(String uri, int placeholder, int error, ImageView view, OwnCloudClient client,
+                                     Key key, Context context) {
+        GlideContainer container = new GlideContainer();
+
+        container.url = uri;
+        container.key = key;
+        container.client = client;
+        
         GlideApp.with(context)
-                .load(uri)
+                .load(container)
                 .placeholder(placeholder)
-                .signature(key)
+                .error(error)
                 .into(view);
     }
 
@@ -645,7 +618,23 @@ public class DisplayUtils {
                 .into(target);
     }
 
-    // TODO add transition to glide: .transition(withCrossFade())
+    public static void generateResizedImage(OCFile file, Context context) {
+        Point p = DisplayUtils.getScreenDimension();
+        int pxW = p.x;
+        int pxH = p.y;
+
+        // TODO glide use Log_OC
+        try {
+            GlideApp.with(context)
+                    .load(new File(file.getStoragePath()))
+                    .signature(GlideKey.resizedImage(file)) // TODO glide how to use same key as when really downloading it?
+                    .downloadOnly(pxW, pxH).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void setupBottomBar(BottomNavigationView view, Resources resources, final Activity activity,
                                       int checkedMenuItem) {

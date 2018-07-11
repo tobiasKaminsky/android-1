@@ -302,7 +302,7 @@ public class OCFileListFragment extends ExtendedListFragment implements
         mOnlyFoldersClickable = (args != null) && args.getBoolean(ARG_ONLY_FOLDERS_CLICKABLE, false);
         boolean hideItemOptions = (args != null) && args.getBoolean(ARG_HIDE_ITEM_OPTIONS, false);
 
-        // TODO centralize all client creation
+        // TODO glide centralize all client creation
         OwnCloudClient client = null;
         try {
             Account currentAccount = AccountUtils.getCurrentOwnCloudAccount(MainApp.getAppContext());
@@ -311,7 +311,7 @@ public class OCFileListFragment extends ExtendedListFragment implements
             client = OwnCloudClientManagerFactory.getDefaultSingleton().
                     getClientFor(ocAccount, MainApp.getAppContext());
         } catch (Exception e) {
-            // TODO centralize
+            // TODO glide centralize
         }
 
         mAdapter = new OCFileListAdapter(getActivity(), client, mContainerActivity, this, hideItemOptions,

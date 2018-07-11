@@ -32,13 +32,13 @@ import java.io.InputStream;
  * Custom Model for OwnCloudClient
  */
 
-public class CustomGlideStreamLoader implements ModelLoader<String, InputStream> {
+public class GlideStringStreamLoader implements ModelLoader<String, InputStream> {
     @Nullable
     @Override
     public LoadData<InputStream> buildLoadData(@NonNull String url, int width, int height, @NonNull Options options) {
         // TODO replace key with etag? and type? (avatar, thumbnail, resized image)
         // TODO pass client to stream fetcher?
-        return new LoadData<>(new ObjectKey(url), new HttpUrlStreamFetcher(url));
+        return new LoadData<>(new ObjectKey(url), new GlideStringStreamFetcher(url));
     }
 
     @Override

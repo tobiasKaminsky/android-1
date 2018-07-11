@@ -605,7 +605,7 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
     }
 
     public boolean needsUpdateThumbnail() {
-        // TODO replace with eTag check
+        // TODO glide replace with eTag check
         return mNeedsUpdateThumbnail;
     }
 

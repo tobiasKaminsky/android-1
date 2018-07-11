@@ -36,25 +36,22 @@ import java.io.InputStream;
  * Fetcher with OwnCloudClient
  */
 
-public class HttpStreamFetcher implements DataFetcher<InputStream> {
+public class HttpStreamGlideContainerFetcher implements DataFetcher<InputStream> {
 
-    private static final String TAG = HttpStreamFetcher.class.getName();
+    private static final String TAG = HttpStreamGlideContainerFetcher.class.getName();
     private final GlideContainer container;
 
-    public HttpStreamFetcher(GlideContainer container) {
+    public HttpStreamGlideContainerFetcher(GlideContainer container) {
         this.container = container;
-    }
-
-    public HttpStreamFetcher(String url) {
-        Log_OC.e(TAG, "wrong constructor");
-        container = null;
-        // TODO remove, dummy
     }
 
     @Override
     public void loadData(@NonNull Priority priority, @NonNull DataCallback<? super InputStream> callback) {
         Log_OC.d(TAG, "load thumbnail for: " + container.url);
 
+
+        // TODO glide centralize all urls
+        
         GetMethod get = null;
         try {
             get = new GetMethod(container.url);
@@ -68,10 +65,6 @@ public class HttpStreamFetcher implements DataFetcher<InputStream> {
             }
         } catch (Exception e) {
             Log_OC.e(TAG, e.getMessage(), e);
-        } finally {
-            if (get != null) {
-                get.releaseConnection();
-            }
         }
     }
 

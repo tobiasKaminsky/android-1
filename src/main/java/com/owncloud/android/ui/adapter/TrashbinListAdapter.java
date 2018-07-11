@@ -23,6 +23,7 @@ package com.owncloud.android.ui.adapter;
 import android.accounts.Account;
 import android.content.Context;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -34,8 +35,8 @@ import android.widget.TextView;
 
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
-import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.db.PreferenceManager;
+import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.lib.resources.files.TrashbinFile;
 import com.owncloud.android.ui.interfaces.TrashbinActivityInterface;
@@ -64,15 +65,15 @@ public class TrashbinListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private List<TrashbinFile> files;
     private Context context;
     private Account account;
-    private FileDataStorageManager storageManager;
+    private OwnCloudClient client;
 
-    public TrashbinListAdapter(TrashbinActivityInterface trashbinActivityInterface,
-                               FileDataStorageManager storageManager, Context context) {
+    public TrashbinListAdapter(TrashbinActivityInterface trashbinActivityInterface, Context context) {
         this.files = new ArrayList<>();
         this.trashbinActivityInterface = trashbinActivityInterface;
         this.account = AccountUtils.getCurrentOwnCloudAccount(context);
-        this.storageManager = storageManager;
         this.context = context;
+
+        client = AccountUtils.getClientForCurrentAccount(context);
     }
 
     public void setTrashbinFiles(List<Object> trashbinFiles, boolean clear) {
@@ -207,19 +208,19 @@ public class TrashbinListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         } else {
             if (MimeTypeUtil.isImageOrVideo(file)) {
                 try {
-                    String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
-                            .getBaseUrlForAccount(context, account);
+                    // TODO glide move baseUrl in constructor
+                    Uri baseUrl = client.getBaseUri();
 
                     int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
 
-                    // todo move thumbnail uri to DisplayUtils
+                    // todo glide move thumbnail uri to DisplayUtils
                     int pxW = DisplayUtils.getThumbnailDimension();
                     int pxH = DisplayUtils.getThumbnailDimension();
 
                     String url = baseUrl + "/index.php/apps/files_trashbin/preview?fileId=" +
                             file.getLocalId() + "&x=" + pxW + "&y=" + pxH;
-                    DisplayUtils.downloadImage(url, placeholder, thumbnailView, GlideKey.trashbinThumbnail(file),
-                            context);
+                    DisplayUtils.downloadImage(url, placeholder, placeholder, thumbnailView, client,
+                            GlideKey.trashbinThumbnail(file), context);
 
                     if (file.getMimeType().equalsIgnoreCase("image/png")) {
                         thumbnailView.setBackgroundColor(context.getResources().getColor(R.color.background_color));

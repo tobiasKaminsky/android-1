@@ -26,7 +26,6 @@ package com.owncloud.android.ui.fragment;
 import android.accounts.Account;
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,7 +47,6 @@ import android.widget.TextView;
 
 import com.owncloud.android.R;
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.lib.resources.shares.OCShare;
 import com.owncloud.android.lib.resources.shares.ShareType;
@@ -192,13 +190,14 @@ public class ShareFileFragment extends Fragment implements ShareUserListAdapter.
         icon.setImageDrawable(
                 MimeTypeUtil.getFileTypeIcon(mFile.getMimeType(), mFile.getFileName(), mAccount, getContext())
         );
-        if (MimeTypeUtil.isImage(mFile)) {
-            String remoteId = String.valueOf(mFile.getRemoteId());
-            Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(remoteId);
-            if (thumbnail != null) {
-                icon.setImageBitmap(thumbnail);
-            }
-        }
+        // TODO glide
+//        if (MimeTypeUtil.isImage(mFile)) {
+//            String remoteId = String.valueOf(mFile.getRemoteId());
+//            Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(remoteId);
+//            if (thumbnail != null) {
+//                icon.setImageBitmap(thumbnail);
+//            }
+//        }
 
         // Title
         TextView title = view.findViewById(R.id.shareWithUsersSectionTitle);

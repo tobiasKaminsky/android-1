@@ -26,13 +26,13 @@ import android.accounts.Account;
 import android.content.Context;
 
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult.ResultCode;
 import com.owncloud.android.lib.resources.files.RemoveRemoteFileOperation;
 import com.owncloud.android.operations.common.SyncOperation;
+import com.owncloud.android.utils.DisplayUtils;
 
 
 /**
@@ -92,7 +92,7 @@ public class RemoveFileOperation extends SyncOperation {
         fileToRemove = getStorageManager().getFileByPath(remotePath);
 
         // store resized image
-        ThumbnailsCacheManager.generateResizedImage(fileToRemove);
+        DisplayUtils.generateResizedImage(fileToRemove, context);
 
         boolean localRemovalFailed = false;
         if (!onlyLocalCopy) {

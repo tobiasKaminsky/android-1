@@ -232,7 +232,7 @@ public class PreviewImageFragment extends FileFragment {
 //                    mImageView.setVisibility(View.VISIBLE);
 //                    mBitmap = resizedImage;
 //                } else {
-                // TODO show thumbnail while loading resized image
+                // TODO glide show thumbnail while loading resized image
 //                    Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
 //                            String.valueOf(ThumbnailsCacheManager.PREFIX_THUMBNAIL + getFile().getRemoteId()));
 //
@@ -245,10 +245,10 @@ public class PreviewImageFragment extends FileFragment {
 //                    }
 
                     // generate new resized image
-                // TODO replace
+                // TODO glide replace
                     Log_OC.d("parallel", getFile().getFileName() + " started");
 
-                // TODO move client somewhere else
+                // TODO glide move client somewhere else
                 try {
                     Account account = AccountUtils.getCurrentOwnCloudAccount(getContext());
                     OwnCloudAccount ocAccount = new OwnCloudAccount(account, MainApp.getAppContext());
@@ -263,37 +263,16 @@ public class PreviewImageFragment extends FileFragment {
                     String uri = mClient.getBaseUri() + "/index.php/core/preview.png?file="
                             + URLEncoder.encode(getFile().getRemotePath())
                             + "&x=" + pxW + "&y=" + pxH + "&a=1&mode=cover&forceIcon=0";
-                    DisplayUtils.downloadImage(uri, R.drawable.file_image, mImageView,
+
+                    // TODO glide move pxW/pxH in DisplayUtils
+                    DisplayUtils.downloadImage(uri, R.drawable.file_image, R.drawable.file_image, mImageView, mClient,
                             GlideKey.resizedImage(getFile()), getContext());
                 } catch (Exception e) {
                     Log_OC.d(TAG, e.getMessage());
                 }
 
-
-//                    if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(getFile(), mImageView) &&
-//                            mContainerActivity.getStorageManager() != null) {
-//                        final ThumbnailsCacheManager.ResizedImageGenerationTask task =
-//                                new ThumbnailsCacheManager.ResizedImageGenerationTask(PreviewImageFragment.this,
-//                                        mImageView,
-//                                        mContainerActivity.getStorageManager(),
-//                                        mContainerActivity.getStorageManager().getAccount());
-//                        if (resizedImage == null) {
-//                            resizedImage = thumbnail;
-//                        }
-//                        final ThumbnailsCacheManager.AsyncResizedImageDrawable asyncDrawable =
-//                                new ThumbnailsCacheManager.AsyncResizedImageDrawable(
-//                                        MainApp.getAppContext().getResources(),
-//                                        resizedImage,
-//                                        task
-//                                );
-//                        mImageView.setImageDrawable(asyncDrawable);
-//                        task.execute(getFile());
-//                    }
-//                }
                 mMultiView.setVisibility(View.GONE);
-                if (getResources() != null) {
-                    mImageView.setBackgroundColor(getResources().getColor(R.color.black));
-                }
+                mImageView.setBackgroundColor(getResources().getColor(R.color.black));
                 mImageView.setVisibility(View.VISIBLE);
 
             } else {

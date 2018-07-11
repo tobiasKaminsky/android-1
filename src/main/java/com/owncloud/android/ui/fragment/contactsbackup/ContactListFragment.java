@@ -62,11 +62,16 @@ import android.widget.Toast;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
+import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
+import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
 import com.owncloud.android.files.services.FileDownloader;
 import com.owncloud.android.jobs.ContactsImportJob;
+import com.owncloud.android.lib.common.OwnCloudAccount;
+import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.ui.TextDrawable;
 import com.owncloud.android.ui.activity.ContactsPreferenceActivity;
@@ -165,6 +170,16 @@ public class ContactListFragment extends FileFragment {
         View view = inflater.inflate(R.layout.contactlist_fragment, container, false);
         ButterKnife.bind(this, view);
 
+        OwnCloudClient client;
+        try {
+            Account currentAccount = AccountUtils.getCurrentOwnCloudAccount(MainApp.getAppContext());
+            OwnCloudAccount ocAccount = new OwnCloudAccount(currentAccount, getContext());
+            client = OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount, getContext());
+        } catch (Exception e) {
+            // TODO glide better
+            client = null;
+        }
+
         setHasOptionsMenu(true);
 
         ContactsPreferenceActivity contactsPreferenceActivity = (ContactsPreferenceActivity) getActivity();
@@ -181,7 +196,7 @@ public class ContactListFragment extends FileFragment {
         recyclerView = view.findViewById(R.id.contactlist_recyclerview);
 
         if (savedInstanceState == null) {
-            contactListAdapter = new ContactListAdapter(getContext(), vCards);
+            contactListAdapter = new ContactListAdapter(getContext(), client, vCards);
         } else {
             Set<Integer> checkedItems = new HashSet<>();
             int[] itemsArray = savedInstanceState.getIntArray(CHECKED_ITEMS_ARRAY_KEY);
@@ -191,7 +206,7 @@ public class ContactListFragment extends FileFragment {
             if (checkedItems.size() > 0) {
                 onMessageEvent(new VCardToggleEvent(true));
             }
-            contactListAdapter = new ContactListAdapter(getContext(), vCards, checkedItems);
+            contactListAdapter = new ContactListAdapter(getContext(), client, vCards, checkedItems);
         }
         recyclerView.setAdapter(contactListAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -565,20 +580,22 @@ public class ContactListFragment extends FileFragment {
 class ContactListAdapter extends RecyclerView.Adapter<ContactListFragment.ContactItemViewHolder> {
     private List<VCard> vCards;
     private Set<Integer> checkedVCards;
-
+    private OwnCloudClient client;
+    
     private Context context;
 
-    ContactListAdapter(Context context, List<VCard> vCards) {
+    ContactListAdapter(Context context, OwnCloudClient client, List<VCard> vCards) {
         this.vCards = vCards;
         this.context = context;
         this.checkedVCards = new HashSet<>();
+        this.client = client;
     }
 
-    ContactListAdapter(Context context, List<VCard> vCards,
-                       Set<Integer> checkedVCards) {
+    ContactListAdapter(Context context, OwnCloudClient client, List<VCard> vCards, Set<Integer> checkedVCards) {
         this.vCards = vCards;
         this.context = context;
         this.checkedVCards = checkedVCards;
+        this.client = client;
     }
 
     public int getCheckedCount() {
@@ -660,7 +677,8 @@ class ContactListAdapter extends RecyclerView.Adapter<ContactListFragment.Contac
 
             imageView.setImageDrawable(drawable);
         } else if (url != null) {
-            DisplayUtils.downloadImage(url, R.drawable.ic_user, imageView, GlideKey.url(url), context);
+            DisplayUtils.downloadImage(url, R.drawable.ic_user, R.drawable.ic_user, imageView, client,
+                    GlideKey.url(url), context);
         }
     }
 

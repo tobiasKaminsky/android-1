@@ -186,6 +186,12 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
                 setThumbnail(file, gridViewHolder.thumbnail);
 
+                if (MimeTypeUtil.isVideo(file)) {
+                    gridViewHolder.playIcon.setVisibility(View.VISIBLE);
+                } else {
+                    gridViewHolder.playIcon.setVisibility(View.GONE);
+                }
+
                 if (file.isDirectory()) {
                     gridViewHolder.checkbox.setVisibility(View.GONE);
                 } else {
@@ -229,7 +235,6 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
         } else {
             if (MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file)) {
                 int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
-                // TODO add video button
                 DisplayUtils.localImage(file, placeholder, placeholder, thumbnailView, GlideKey.localFile(file),
                         mContext);
             } else {
@@ -495,6 +500,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
         private final TextView fileName;
         private final ImageView checkbox;
         private final LinearLayout itemLayout;
+        private final ImageView playIcon;
 
         private LocalFileListGridViewHolder(View itemView) {
             super(itemView);
@@ -503,6 +509,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
             fileName = itemView.findViewById(R.id.Filename);
             checkbox = itemView.findViewById(R.id.custom_checkbox);
             itemLayout = itemView.findViewById(R.id.ListItemLayout);
+            playIcon = itemView.findViewById(R.id.play_icon);
 
             itemView.findViewById(R.id.overflow_menu).setVisibility(View.GONE);
             itemView.findViewById(R.id.sharedIcon).setVisibility(View.GONE);

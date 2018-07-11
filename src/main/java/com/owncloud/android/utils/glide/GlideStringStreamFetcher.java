@@ -45,17 +45,18 @@ import java.io.InputStream;
  * Fetcher with OwnCloudClient
  */
 
-public class HttpUrlStreamFetcher implements DataFetcher<InputStream> {
+public class GlideStringStreamFetcher implements DataFetcher<InputStream> {
 
-    private static final String TAG = HttpUrlStreamFetcher.class.getName();
+    private static final String TAG = GlideStringStreamFetcher.class.getName();
     private final String url;
 
-    public HttpUrlStreamFetcher(String url) {
+    public GlideStringStreamFetcher(String url) {
         this.url = url;
     }
 
     @Override
     public void loadData(@NonNull Priority priority, @NonNull DataCallback<? super InputStream> callback) {
+        // TODO glide do not create client
         Log_OC.d(TAG, "load thumbnail for: " + url);
         Account mAccount = AccountUtils.getCurrentOwnCloudAccount(MainApp.getAppContext());
         OwnCloudAccount ocAccount = null;
@@ -81,8 +82,6 @@ public class HttpUrlStreamFetcher implements DataFetcher<InputStream> {
         if (mClient != null) {
             GetMethod get = null;
             try {
-//                Thread.sleep(3000);
-
                 get = new GetMethod(url);
                 get.setRequestHeader("Cookie", "nc_sameSiteCookielax=true;nc_sameSiteCookiestrict=true");
                 get.setRequestHeader(RemoteOperation.OCS_API_HEADER, RemoteOperation.OCS_API_HEADER_VALUE);

@@ -36,9 +36,7 @@ public class GlideContainerStreamLoader implements ModelLoader<GlideContainer, I
     @Override
     public LoadData<InputStream> buildLoadData(@NonNull GlideContainer container, int width, int height,
                                                @NonNull Options options) {
-        // TODO replace key with etag? and type? (avatar, thumbnail, resized image)
-        // TODO pass client to stream fetcher?
-        return new LoadData<>(container.key, new HttpStreamFetcher(container));
+        return new LoadData<>(container.key, new HttpStreamGlideContainerFetcher(container));
     }
 
     @Override

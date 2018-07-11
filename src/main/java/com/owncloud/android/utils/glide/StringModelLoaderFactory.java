@@ -13,7 +13,7 @@ public class StringModelLoaderFactory implements ModelLoaderFactory<String, Inpu
     @NonNull
     @Override
     public ModelLoader<String, InputStream> build(@NonNull MultiModelLoaderFactory unused) {
-        return new CustomGlideStreamLoader();
+        return new GlideStringStreamLoader();
     }
 
     @Override

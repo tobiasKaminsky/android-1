@@ -22,7 +22,6 @@ package com.owncloud.android.ui.adapter;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
@@ -56,7 +55,6 @@ import com.owncloud.android.lib.resources.files.FileUtils;
 import com.owncloud.android.ui.interfaces.ActivityListInterface;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
-import com.owncloud.android.utils.glide.GlideKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -230,18 +228,8 @@ public class ActivityListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         // No Folder
         if (!file.isFolder()) {
             if ((MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file))) {
-                int placeholder;
-
-                if (MimeTypeUtil.isImage(file)) {
-                    placeholder = R.drawable.file_image;
-                } else {
-                    placeholder = R.drawable.file_movie;
-                }
-
-                String uri = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + px + "/" + px +
-                        Uri.encode(file.getRemotePath(), "/");
-
-                DisplayUtils.downloadImage(uri, placeholder, fileIcon, GlideKey.serverThumbnail(file), context);
+                // TODO glide activity: no etag available, if fresh started
+                DisplayUtils.downloadThumbnail(file, fileIcon, client, context);
             } else {
                 if (isDetailView) {
                     fileIcon.setVisibility(View.GONE);

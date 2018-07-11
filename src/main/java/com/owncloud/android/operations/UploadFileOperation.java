@@ -1339,7 +1339,8 @@ public class UploadFileOperation extends SyncOperation {
         FileDataStorageManager.triggerMediaScan(file.getStoragePath());
 
         // generate new Thumbnail
-        // TODO replace
+
+        // TODO glide replace
 //        final ThumbnailsCacheManager.ThumbnailGenerationTask task =
 //                new ThumbnailsCacheManager.ThumbnailGenerationTask(getStorageManager(), mAccount);
 //        task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file, file.getRemoteId()));
@@ -1353,6 +1354,7 @@ public class UploadFileOperation extends SyncOperation {
         file.setModificationTimestampAtLastSyncForData(remoteFile.getModifiedTimestamp());
         file.setEtag(remoteFile.getEtag());
         file.setRemoteId(remoteFile.getRemoteId());
+        file.setEtagOnServer(remoteFile.getEtag());
     }
 
     public interface OnRenameListener {

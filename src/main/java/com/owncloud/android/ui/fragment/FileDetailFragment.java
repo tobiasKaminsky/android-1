@@ -25,6 +25,7 @@ package com.owncloud.android.ui.fragment;
 import android.accounts.Account;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -42,13 +43,17 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
+import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
-import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.files.FileMenuFilter;
 import com.owncloud.android.files.services.FileDownloader.FileDownloaderBinder;
 import com.owncloud.android.files.services.FileUploader.FileUploaderBinder;
+import com.owncloud.android.lib.common.OwnCloudAccount;
+import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.network.OnDatatransferProgressListener;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.ui.activity.FileActivity;
@@ -60,8 +65,10 @@ import com.owncloud.android.ui.dialog.RenameFileDialogFragment;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
 import com.owncloud.android.utils.ThemeUtils;
+import com.owncloud.android.utils.glide.GlideKey;
 
 import java.lang.ref.WeakReference;
+import java.net.URLEncoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -554,28 +561,43 @@ public class FileDetailFragment extends FileFragment implements OnClickListener 
     private void setFilePreview(OCFile file) {
         Bitmap resizedImage;
 
-        if (MimeTypeUtil.isImage(file) && activity != null) {
-            String tagId = String.valueOf(ThumbnailsCacheManager.PREFIX_RESIZED_IMAGE + getFile().getRemoteId());
-            resizedImage = ThumbnailsCacheManager.getBitmapFromDiskCache(tagId);
+        if (MimeTypeUtil.isImage(file) && activity != null && activity.getPreviewImageView() != null) {
+            OwnCloudClient mClient = null;
+            try {
+                Account account = AccountUtils.getCurrentOwnCloudAccount(getContext());
+                OwnCloudAccount ocAccount = new OwnCloudAccount(account, MainApp.getAppContext());
 
-            if (resizedImage != null && !file.needsUpdateThumbnail()) {
-                activity.setPreviewImageBitmap(resizedImage);
-                activatePreviewImage();
-                previewLoaded = true;
-            } else {
-                // show thumbnail while loading resized image
-                Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
-                        String.valueOf(ThumbnailsCacheManager.PREFIX_THUMBNAIL + getFile().getRemoteId()));
+                mClient = OwnCloudClientManagerFactory.getDefaultSingleton().
+                        getClientFor(ocAccount, MainApp.getAppContext());
+            } catch (Exception e) {
+                // TODO glide
+            }
+            // TODO glide
+            Point p = DisplayUtils.getScreenDimension();
+            int pxW = p.x;
+            int pxH = p.y;
 
-                if (thumbnail != null) {
-                    activity.setPreviewImageBitmap(thumbnail);
-                } else {
-                    // TODO
+            String uri = mClient.getBaseUri() + "/index.php/core/preview.png?file="
+                    + URLEncoder.encode(getFile().getRemotePath())
+                    + "&x=" + pxW + "&y=" + pxH + "&a=1&mode=cover&forceIcon=0";
+            DisplayUtils.downloadImage(uri, R.drawable.file_image, R.drawable.file_image, activity.getPreviewImageView(), mClient,
+                    GlideKey.resizedImage(getFile()), getContext());
+            activatePreviewImage();
+            previewLoaded = true;
+
+            // if no resized image, show thumbnail while loading resized image
+//                Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
+//                        String.valueOf(ThumbnailsCacheManager.PREFIX_THUMBNAIL + getFile().getRemoteId()));
+
+//                if (thumbnail != null) {
+//                    activity.setPreviewImageBitmap(thumbnail);
+//                } else {
+            // TODO glide
                     // thumbnail = ThumbnailsCacheManager.mDefaultImg;
-                }
+//                }
 
                 // generate new resized image
-                // TODO replace
+            // TODO glide replace
 //                if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(getFile(), activity.getPreviewImageView()) &&
 //                        mContainerActivity.getStorageManager() != null) {
 //                    final ThumbnailsCacheManager.ResizedImageGenerationTask task =
@@ -601,7 +623,6 @@ public class FileDetailFragment extends FileFragment implements OnClickListener 
 //                    task.execute(getFile());
 //                }
             }
-        }
     }
 
     /**

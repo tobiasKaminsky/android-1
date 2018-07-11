@@ -38,6 +38,15 @@
             android:contentDescription="@string/thumbnail"/>
 
         <ImageView
+            android:id="@+id/play_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:contentDescription="@string/thumbnail"
+            android:src="@drawable/ic_play_arrow"/>
+
+        <ImageView
             android:id="@+id/favorite_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
