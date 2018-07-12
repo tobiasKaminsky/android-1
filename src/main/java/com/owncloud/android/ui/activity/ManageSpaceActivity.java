@@ -34,7 +34,6 @@ import android.widget.TextView;
 
 import com.owncloud.android.R;
 import com.owncloud.android.lib.common.utils.Log_OC;
-import com.owncloud.android.utils.glide.GlideApp;
 
 import java.io.File;
 
@@ -109,8 +108,6 @@ public class ManageSpaceActivity extends AppCompatActivity {
 
             // Clear data
             result = clearApplicationData();
-            clearGlideCache();
-
 
             // Clear SharedPreferences
             SharedPreferences.Editor appPrefsEditor = PreferenceManager
@@ -146,10 +143,6 @@ public class ManageSpaceActivity extends AppCompatActivity {
                 System.exit(0);
             }
 
-        }
-
-        private void clearGlideCache() {
-            GlideApp.get(getBaseContext()).clearDiskCache();
         }
 
         public boolean clearApplicationData() {

@@ -626,8 +626,7 @@ public class DisplayUtils {
         // TODO glide use Log_OC
         try {
             GlideApp.with(context)
-                    .load(new File(file.getStoragePath()))
-                    .signature(GlideKey.resizedImage(file)) // TODO glide how to use same key as when really downloading it?
+                    .load(file)
                     .downloadOnly(pxW, pxH).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
