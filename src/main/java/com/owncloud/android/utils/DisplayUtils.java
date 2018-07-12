@@ -636,6 +636,23 @@ public class DisplayUtils {
         }
     }
 
+    public static void generateThumbnail(OCFile file, Context context) {
+        int pxW = DisplayUtils.getThumbnailDimension();
+        int pxH = DisplayUtils.getThumbnailDimension();
+
+        // TODO glide use Log_OC
+        try {
+            GlideApp.with(context)
+                    .load(new File(file.getStoragePath()))
+                    .signature(GlideKey.serverThumbnail(file)) // TODO glide how to use same key as when really downloading it?
+                    .downloadOnly(pxW, pxH).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void setupBottomBar(BottomNavigationView view, Resources resources, final Activity activity,
                                       int checkedMenuItem) {
 

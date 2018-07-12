@@ -362,51 +362,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     mContext));
         } else {
             if ((MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file)) && file.getRemoteId() != null) {
-                // TODO glide add this somehow to glide
-//                if (!file.needsUpdateThumbnail()) {
-//                    if (MimeTypeUtil.isVideo(file)) {
-//                        Bitmap withOverlay = ThumbnailsCacheManager.addVideoOverlay(thumbnail);
-//                        thumbnailView.setImageBitmap(withOverlay);
-//                    } else {
-//                        thumbnailView.setImageBitmap(thumbnail);
-//                    }
-//                } else {
-                    // generate new thumbnail
-                    Log_OC.d("parallel", "Thumbnail " + file.getFileName() + " started");
-
-
-                try {
-                    DisplayUtils.downloadThumbnail(file, thumbnailView, client, mContext);
-                } catch (Exception e) {
-                    Log_OC.e(TAG, e.getMessage());
-                    // do something
-                }
-
-//                    if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, thumbnailView)) {
-//                        try {
-//                            final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-//                                    new ThumbnailsCacheManager.ThumbnailGenerationTask(thumbnailView, mStorageManager,
-//                                            mAccount, asyncTasks);
-//
-//                            if (thumbnail == null) {
-//                                if (MimeTypeUtil.isVideo(file)) {
-//                                    thumbnail = ThumbnailsCacheManager.mDefaultVideo;
-//                                } else {
-//                                    thumbnail = ThumbnailsCacheManager.mDefaultImg;
-//                                }
-//                            }
-//                            final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
-//                                    new ThumbnailsCacheManager.AsyncThumbnailDrawable(mContext.getResources(),
-//                                            thumbnail, task);
-//                            thumbnailView.setImageDrawable(asyncDrawable);
-//                            asyncTasks.add(task);
-//                            task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file,
-//                                    file.getRemoteId()));
-//                        } catch (IllegalArgumentException e) {
-//                            Log_OC.d(TAG, "ThumbnailGenerationTask : " + e.getMessage());
-//                        }
-//                    }
-//                }
+                DisplayUtils.downloadThumbnail(file, thumbnailView, client, mContext);
 
                 if (file.getMimeType().equalsIgnoreCase("image/png")) {
                     thumbnailView.setBackgroundColor(mContext.getResources().getColor(R.color.background_color));

@@ -84,7 +84,7 @@ public class FileContentProvider extends ContentProvider {
     private static final String TEXT = " TEXT, ";
     private static final String ALTER_TABLE = "ALTER TABLE ";
     private static final String ADD_COLUMN = " ADD COLUMN ";
-    private static final String REMOVE_COLUMN = " REMOVE COLUMN ";
+    private static final String REMOVE_COLUMN = " DROP COLUMN ";
     private static final String UPGRADE_VERSION_MSG = "OUT of the ADD in onUpgrade; oldVersion == %d, newVersion == %d";
     private DataBaseHelper mDbHelper;
     private Context mContext;
@@ -739,7 +739,6 @@ public class FileContentProvider extends ContentProvider {
                 + ProviderTableMeta.FILE_PUBLIC_LINK + TEXT
                 + ProviderTableMeta.FILE_PERMISSIONS + " TEXT null,"
                 + ProviderTableMeta.FILE_REMOTE_ID + " TEXT null,"
-                + ProviderTableMeta.FILE_UPDATE_THUMBNAIL + INTEGER //boolean
                 + ProviderTableMeta.FILE_IS_DOWNLOADING + INTEGER //boolean
                 + ProviderTableMeta.FILE_FAVORITE + INTEGER // boolean
                 + ProviderTableMeta.FILE_IS_ENCRYPTED + INTEGER // boolean

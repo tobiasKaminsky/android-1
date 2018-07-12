@@ -469,7 +469,6 @@ public class RefreshFolderOperation extends RemoteOperation {
             }
 
             updatedFile.setEtag(localFile.getEtag());
-            updatedFile.setEtagOnServer(remoteFile.getEtag());
 
             if (updatedFile.isFolder()) {
                 updatedFile.setFileLength(remoteFile.getFileLength());
@@ -477,7 +476,6 @@ public class RefreshFolderOperation extends RemoteOperation {
             } else if (remoteFolderChanged && MimeTypeUtil.isImage(remoteFile) &&
                     remoteFile.getModificationTimestamp() !=
                             localFile.getModificationTimestamp()) {
-                updatedFile.setNeedsUpdateThumbnail(true);
                 Log.d(TAG, "Image " + remoteFile.getFileName() + " updated on the server");
             }
 
@@ -488,6 +486,9 @@ public class RefreshFolderOperation extends RemoteOperation {
             // remote eTag will not be updated unless file CONTENTS are synchronized
             updatedFile.setEtag("");
         }
+
+        // eTag on Server is used for thumbnail validation
+        updatedFile.setEtagOnServer(remoteFile.getEtag());
     }
 
     @NonNull

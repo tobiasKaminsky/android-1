@@ -23,7 +23,6 @@ package com.owncloud.android.ui.adapter;
 import android.accounts.Account;
 import android.content.Context;
 import android.content.res.Resources;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -208,16 +207,13 @@ public class TrashbinListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         } else {
             if (MimeTypeUtil.isImageOrVideo(file)) {
                 try {
-                    // TODO glide move baseUrl in constructor
-                    Uri baseUrl = client.getBaseUri();
-
                     int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
 
                     // todo glide move thumbnail uri to DisplayUtils
                     int pxW = DisplayUtils.getThumbnailDimension();
                     int pxH = DisplayUtils.getThumbnailDimension();
 
-                    String url = baseUrl + "/index.php/apps/files_trashbin/preview?fileId=" +
+                    String url = client.getBaseUri() + "/index.php/apps/files_trashbin/preview?fileId=" +
                             file.getLocalId() + "&x=" + pxW + "&y=" + pxH;
                     DisplayUtils.downloadImage(url, placeholder, placeholder, thumbnailView, client,
                             GlideKey.trashbinThumbnail(file), context);

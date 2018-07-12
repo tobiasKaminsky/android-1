@@ -604,15 +604,6 @@ public class OCFile implements Parcelable, Comparable<OCFile>, ServerFileInterfa
         return mNeedsUpdating;
     }
 
-    public boolean needsUpdateThumbnail() {
-        // TODO glide replace with eTag check
-        return mNeedsUpdateThumbnail;
-    }
-
-    public void setNeedsUpdateThumbnail(boolean needsUpdateThumbnail) {
-        this.mNeedsUpdateThumbnail = needsUpdateThumbnail;
-    }
-
     public long getLastSyncDateForProperties() {
         return mLastSyncDateForProperties;
     }

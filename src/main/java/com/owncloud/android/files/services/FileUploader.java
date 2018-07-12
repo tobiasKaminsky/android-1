@@ -70,6 +70,7 @@ import com.owncloud.android.ui.activity.FileActivity;
 import com.owncloud.android.ui.activity.UploadListActivity;
 import com.owncloud.android.ui.notifications.NotificationUtils;
 import com.owncloud.android.utils.ConnectivityUtils;
+import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.ErrorMessageAdapter;
 import com.owncloud.android.utils.PowerUtils;
 import com.owncloud.android.utils.ThemeUtils;
@@ -1122,14 +1123,7 @@ public class FileUploader extends Service
             }
 
             // generate new Thumbnail
-            // TODO glide replace locale file with ocFile key
-//            final ThumbnailsCacheManager.ThumbnailGenerationTask task =
-//                    new ThumbnailsCacheManager.ThumbnailGenerationTask(mStorageManager, mCurrentAccount);
-//
-//            File file = new File(mCurrentUpload.getOriginalStoragePath());
-//            String remoteId = mCurrentUpload.getFile().getRemoteId();
-//
-//            task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file, remoteId));
+            DisplayUtils.generateThumbnail(mCurrentUpload.getFile(), getBaseContext());
         }
     }
 
