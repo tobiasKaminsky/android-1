@@ -32,7 +32,7 @@ import com.owncloud.android.MainApp;
 public class ProviderMeta {
 
     public static final String DB_NAME = "filelist";
-    public static final int DB_VERSION = 34;
+    public static final int DB_VERSION = 35;
 
     private ProviderMeta() {
     }
@@ -169,9 +169,10 @@ public class ProviderMeta {
         public static final String CAPABILITIES_SERVER_SLOGAN = "server_slogan";
         public static final String CAPABILITIES_SERVER_BACKGROUND_DEFAULT = "background_default";
         public static final String CAPABILITIES_SERVER_BACKGROUND_PLAIN = "background_plain";
-        
         public static final String CAPABILITIES_END_TO_END_ENCRYPTION = "end_to_end_encryption";
         public static final String CAPABILITIES_ACTIVITY = "activity";
+        public static final String CAPABILITIES_RICHDOCUMENT = "richdocument";
+        public static final String CAPABILITIES_RICHDOCUMENT_MIMETYPE_LIST = "richdocument_mimetype_list";
 
         public static final String CAPABILITIES_DEFAULT_SORT_ORDER = CAPABILITIES_ACCOUNT_NAME
                 + " collate nocase asc";

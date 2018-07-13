@@ -55,7 +55,7 @@ public class ExternalSiteWebView extends FileActivity {
 
     private boolean showSidebar;
     private int menuItemId;
-    private WebView webview;
+    protected WebView webview;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override

@@ -61,7 +61,9 @@ import com.owncloud.android.lib.resources.status.OCCapability;
 import com.owncloud.android.operations.SynchronizeFileOperation;
 import com.owncloud.android.services.OperationsService;
 import com.owncloud.android.ui.activity.ConflictsResolveActivity;
+import com.owncloud.android.ui.activity.ExternalSiteWebView;
 import com.owncloud.android.ui.activity.FileActivity;
+import com.owncloud.android.ui.activity.RichDocumentsWebView;
 import com.owncloud.android.ui.activity.ShareActivity;
 import com.owncloud.android.ui.dialog.SendShareDialog;
 import com.owncloud.android.ui.events.EncryptionEvent;
@@ -305,6 +307,19 @@ public class FileOperationsHelper {
         } else {
             Log_OC.e(TAG, "Trying to open a NULL OCFile");
         }
+    }
+
+    public void openFileAsRichDocument(OCFile file, Context context) {
+        Intent collaboraWebViewIntent = new Intent(context, RichDocumentsWebView.class);
+
+//        String url = "https://collabora-test.nextcloud.com/apps/richdocuments/direct/SxGVUwtwikCyXWRoVECStVZAeKWDt9ULWqDgw3dyaW5d2ZevHcjcUGcFuYtfGeBu";
+        String url = "http://10.0.2.2/test.html";
+
+        collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
+        collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, url);
+        collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
+        // collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_MENU_ITEM_ID, menuItem.getItemId());
+        context.startActivity(collaboraWebViewIntent);
     }
 
     @NonNull

@@ -912,6 +912,10 @@ public class OCFileListFragment extends ExtendedListFragment implements
                     mContainerActivity.getFileOperationsHelper().streamMediaFile(singleFile);
                     return true;
                 }
+                case R.id.action_open_file_as_richdocument: {
+                    mContainerActivity.getFileOperationsHelper().openFileAsRichDocument(singleFile, getContext());
+                    return true;
+                }
                 case R.id.action_rename_file: {
                     RenameFileDialogFragment dialog = RenameFileDialogFragment.newInstance(singleFile);
                     dialog.show(getFragmentManager(), FileDetailFragment.FTAG_RENAME_FILE);

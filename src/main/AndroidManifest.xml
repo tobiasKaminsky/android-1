@@ -106,6 +106,9 @@
         <activity android:name=".ui.activity.UploadFilesActivity" />
         <activity android:name=".ui.activity.ExternalSiteWebView"
                   android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
+            android:name=".ui.activity.RichDocumentsWebView"
+            android:configChanges="orientation|screenSize|keyboardHidden"/>
         <activity android:name=".ui.activity.ContactsPreferenceActivity"
             android:launchMode="singleInstance"/>
         <activity android:name=".ui.activity.ReceiveExternalFilesActivity"
