@@ -292,7 +292,6 @@ public class PreviewImageFragment extends FileFragment {
                     containerResizedImage.key = GlideKey.resizedImage(getFile());
                     containerResizedImage.client = mClient;
 
-                    // TODO: if in preview image fragment and swipe until no thumbnail is in cache, it will first download thumbnail and only after that the resized image
                     GlideApp.with(getContext())
                             .asBitmap()
                             .load(container)
@@ -301,32 +300,17 @@ public class PreviewImageFragment extends FileFragment {
                             .into(new SimpleTarget<Bitmap>() {
                                       @Override
                                       public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                                          Log_OC.d(TAG, "no cached version")
+                                          loadResizedImage(containerResizedImage);
                                       }
 
                                       @Override
-                                      public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                          mImageView.setImageBitmap(resource);
-
-                                          GlideApp.with(getContext())
-                                                  .asBitmap()
-                                                  .load(containerResizedImage)
-                                                  .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                                  .into(new SimpleTarget<Bitmap>() {
-                                                            @Override
-                                                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                                                mImageView.setImageBitmap(resource);
-                                                            }
-                                                        }
-                                                  );
+                                      public void onResourceReady(@NonNull Bitmap resource,
+                                                                  @Nullable Transition<? super Bitmap> transition) {
+                                          loadResizedImage(containerResizedImage);
                                       }
                                   }
                             );
-
-
                     // TODO glide move pxW/pxH in DisplayUtils
-//                            DisplayUtils.downloadImage(uri, thumbnail, thumbnail, mImageView, mClient,
-//                                    GlideKey.resizedImage(getFile()), getContext());
                 } catch (Exception e) {
                     Log_OC.e(TAG, e.getMessage());
                 }
@@ -342,6 +326,21 @@ public class PreviewImageFragment extends FileFragment {
         } else {
             showErrorMessage(R.string.preview_image_error_no_local_file);
         }
+    }
+
+    private void loadResizedImage(GlideContainer containerResizedImage) {
+        GlideApp.with(getContext())
+                .asBitmap()
+                .load(containerResizedImage)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(new SimpleTarget<Bitmap>() {
+                          @Override
+                          public void onResourceReady(@NonNull Bitmap resource,
+                                                      @Nullable Transition<? super Bitmap> transition) {
+                              mImageView.setImageBitmap(resource);
+                          }
+                      }
+                );
     }
 
     @Override
