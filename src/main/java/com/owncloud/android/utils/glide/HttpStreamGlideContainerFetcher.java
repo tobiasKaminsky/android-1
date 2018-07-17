@@ -50,6 +50,13 @@ public class HttpStreamGlideContainerFetcher implements DataFetcher<InputStream>
         Log_OC.d(TAG, "load thumbnail for: " + container.url);
 
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         // TODO glide centralize all urls
         
         GetMethod get = null;

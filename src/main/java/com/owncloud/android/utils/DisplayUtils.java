@@ -60,6 +60,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.load.Key;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.target.Target;
 import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
@@ -593,6 +594,30 @@ public class DisplayUtils {
                 .into(view);
     }
 
+    public static Drawable getThumbnail(OCFile file, ImageView view, OwnCloudClient client, Context context) {
+        GlideContainer container = new GlideContainer();
+
+        int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
+        int pxW = DisplayUtils.getThumbnailDimension();
+        int pxH = DisplayUtils.getThumbnailDimension();
+
+        container.url = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
+                Uri.encode(file.getRemotePath(), "/");
+        container.client = client;
+        container.key = GlideKey.serverThumbnail(file);
+
+        try {
+            return GlideApp.with(context)
+                    .load(container)
+                    .placeholder(placeholder)
+                    .into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                    .get();
+        } catch (InterruptedException | ExecutionException e) {
+            Log_OC.e(TAG, "Could not download image " + container.url);
+            return context.getResources().getDrawable(placeholder);
+        }
+    }
+
     public static void downloadImage(String uri, int placeholder, int error, ImageView view, OwnCloudClient client,
                                      Key key, Context context) {
         GlideContainer container = new GlideContainer();
@@ -607,6 +632,23 @@ public class DisplayUtils {
                 .error(error)
                 .into(view);
     }
+
+//    public static void showResizedImage(String uri, Drawable placeholder, Drawable error, ImageView view, OwnCloudClient client,
+//                                     Key key, Context context) {
+//        
+//        
+//        GlideContainer container = new GlideContainer();
+//
+//        container.url = uri;
+//        container.key = key;
+//        container.client = client;
+//
+//        GlideApp.with(context)
+//                .load(container)
+//                .placeholder(placeholder)
+//                .error(error)
+//                .into(view);
+//    }
 
     public static void downloadImage(String uri, int placeholder, int error, SimpleTarget<Drawable> target, Key key,
                                      Context context) {

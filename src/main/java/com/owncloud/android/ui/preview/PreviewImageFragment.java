@@ -29,12 +29,14 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.PictureDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -51,6 +53,9 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.caverock.androidsvg.SVG;
 import com.caverock.androidsvg.SVGParseException;
 import com.github.chrisbanes.photoview.PhotoView;
@@ -69,6 +74,8 @@ import com.owncloud.android.ui.fragment.FileFragment;
 import com.owncloud.android.utils.BitmapUtils;
 import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
+import com.owncloud.android.utils.glide.GlideApp;
+import com.owncloud.android.utils.glide.GlideContainer;
 import com.owncloud.android.utils.glide.GlideKey;
 
 import java.io.FileInputStream;
@@ -227,12 +234,37 @@ public class PreviewImageFragment extends FileFragment {
         if (getFile() != null) {
 
             if (mShowResizedImage) {
+                // first show thumbnail
+                try {
+                    Account account = AccountUtils.getCurrentOwnCloudAccount(getContext());
+                    OwnCloudAccount ocAccount = new OwnCloudAccount(account, MainApp.getAppContext());
+
+                    OwnCloudClient mClient = OwnCloudClientManagerFactory.getDefaultSingleton().
+                            getClientFor(ocAccount, MainApp.getAppContext());
+
+                    int thumbnailW = DisplayUtils.getThumbnailDimension();
+                    int thumbnailH = DisplayUtils.getThumbnailDimension();
+//
+//                                String thumbnailUrl = mClient.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + thumbnailW + "/" + thumbnailH +
+//                                        Uri.encode(getFile().getRemotePath(), "/");
+//                            // Drawable thumbnail = DisplayUtils.getThumbnail(getFile(), mImageView, mClient, getContext());
+
+                    // Thumbnail
+                    GlideContainer container = new GlideContainer();
+                    int placeholder = MimeTypeUtil.isVideo(getFile()) ? R.drawable.file_movie : R.drawable.file_image;
+
+                    container.url = mClient.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + thumbnailW + "/" + thumbnailH +
+                            Uri.encode(getFile().getRemotePath(), "/");
+                    container.client = mClient;
+                    container.key = GlideKey.serverThumbnail(getFile());
+
+
 //                if (resizedImage != null && !getFile().needsUpdateThumbnail()) {
 //                    mImageView.setImageBitmap(resizedImage);
 //                    mImageView.setVisibility(View.VISIBLE);
 //                    mBitmap = resizedImage;
 //                } else {
-                // TODO glide show thumbnail while loading resized image
+                    // TODO glide show thumbnail while loading resized image
 //                    Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
 //                            String.valueOf(ThumbnailsCacheManager.PREFIX_THUMBNAIL + getFile().getRemoteId()));
 //
@@ -245,30 +277,58 @@ public class PreviewImageFragment extends FileFragment {
 //                    }
 
                     // generate new resized image
-                // TODO glide replace
-                    Log_OC.d("parallel", getFile().getFileName() + " started");
+                    // TODO glide move client somewhere else
 
-                // TODO glide move client somewhere else
-                try {
-                    Account account = AccountUtils.getCurrentOwnCloudAccount(getContext());
-                    OwnCloudAccount ocAccount = new OwnCloudAccount(account, MainApp.getAppContext());
-
-                    OwnCloudClient mClient = OwnCloudClientManagerFactory.getDefaultSingleton().
-                            getClientFor(ocAccount, MainApp.getAppContext());
+                    // resized image
+                    GlideContainer containerResizedImage = new GlideContainer();
 
                     Point p = DisplayUtils.getScreenDimension();
                     int pxW = p.x;
                     int pxH = p.y;
 
-                    String uri = mClient.getBaseUri() + "/index.php/core/preview.png?file="
+                    containerResizedImage.url = mClient.getBaseUri() + "/index.php/core/preview.png?file="
                             + URLEncoder.encode(getFile().getRemotePath())
                             + "&x=" + pxW + "&y=" + pxH + "&a=1&mode=cover&forceIcon=0";
+                    containerResizedImage.key = GlideKey.resizedImage(getFile());
+                    containerResizedImage.client = mClient;
+
+                    // TODO: if in preview image fragment and swipe until no thumbnail is in cache, it will first download thumbnail and only after that the resized image
+                    GlideApp.with(getContext())
+                            .asBitmap()
+                            .load(container)
+                            .onlyRetrieveFromCache(true)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .into(new SimpleTarget<Bitmap>() {
+                                      @Override
+                                      public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                                          Log_OC.d(TAG, "no cached version")
+                                      }
+
+                                      @Override
+                                      public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                                          mImageView.setImageBitmap(resource);
+
+                                          GlideApp.with(getContext())
+                                                  .asBitmap()
+                                                  .load(containerResizedImage)
+                                                  .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                                  .into(new SimpleTarget<Bitmap>() {
+                                                            @Override
+                                                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                                                                mImageView.setImageBitmap(resource);
+                                                            }
+                                                        }
+                                                  );
+                                      }
+                                  }
+                            );
+
 
                     // TODO glide move pxW/pxH in DisplayUtils
-                    DisplayUtils.downloadImage(uri, R.drawable.file_image, R.drawable.file_image, mImageView, mClient,
-                            GlideKey.resizedImage(getFile()), getContext());
+//                            DisplayUtils.downloadImage(uri, thumbnail, thumbnail, mImageView, mClient,
+//                                    GlideKey.resizedImage(getFile()), getContext());
                 } catch (Exception e) {
-                    Log_OC.d(TAG, e.getMessage());
+                    Log_OC.e(TAG, e.getMessage());
                 }
 
                 mMultiView.setVisibility(View.GONE);
@@ -485,8 +545,7 @@ public class PreviewImageFragment extends FileFragment {
                         }
 
                         try {
-                            bitmapResult = BitmapUtils.decodeSampledBitmapFromFile(storagePath, minWidth,
-                                    minHeight);
+                            bitmapResult = BitmapUtils.decodeSampledBitmapFromFile(storagePath, minWidth, minHeight);
 
                             if (isCancelled()) {
                                 return new LoadImage(bitmapResult, null, ocFile);
