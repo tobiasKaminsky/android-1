@@ -53,7 +53,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.Priority;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.caverock.androidsvg.SVG;
@@ -295,8 +295,8 @@ public class PreviewImageFragment extends FileFragment {
                     GlideApp.with(getContext())
                             .asBitmap()
                             .load(container)
+                            .priority(Priority.IMMEDIATE)
                             .onlyRetrieveFromCache(true)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .into(new SimpleTarget<Bitmap>() {
                                       @Override
                                       public void onLoadFailed(@Nullable Drawable errorDrawable) {
@@ -332,7 +332,7 @@ public class PreviewImageFragment extends FileFragment {
         GlideApp.with(getContext())
                 .asBitmap()
                 .load(containerResizedImage)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .priority(Priority.IMMEDIATE)
                 .into(new SimpleTarget<Bitmap>() {
                           @Override
                           public void onResourceReady(@NonNull Bitmap resource,
