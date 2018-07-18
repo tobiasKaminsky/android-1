@@ -6,6 +6,6 @@ import com.owncloud.android.lib.common.OwnCloudClient;
 public class GlideContainer { // TODO glide better naming
     public OwnCloudClient client;
     public Key key;
-    public String type;
+    public String type; // todo needed?
     public String url;
 }

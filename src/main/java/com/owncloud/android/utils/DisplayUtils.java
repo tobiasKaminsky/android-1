@@ -38,6 +38,7 @@ import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -59,6 +60,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.bumptech.glide.load.Key;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.owncloud.android.MainApp;
@@ -68,6 +70,7 @@ import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
 import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.lib.resources.files.SearchOperation;
 import com.owncloud.android.lib.resources.files.ServerFileInterface;
@@ -447,13 +450,34 @@ public class DisplayUtils {
      */
     public static void setAvatar(@NonNull Account account, AvatarGenerationListener listener,
                                  float avatarRadius, Resources resources, FileDataStorageManager storageManager,
-                                 Object callContext, Context context) {
+                                 Object callContext, Context context,
+                                 SimpleTarget<Drawable> target) {
 
         AccountManager accountManager = AccountManager.get(context);
         String userId = accountManager.getUserData(account,
                 com.owncloud.android.lib.common.accounts.AccountUtils.Constants.KEY_USER_ID);
 
-        setAvatar(account, userId, listener, avatarRadius, resources, storageManager, callContext, context);
+        setAvatar(account, userId, listener, avatarRadius, resources, storageManager, callContext, context, target);
+    }
+
+    /**
+     * fetches and sets the avatar of the given account in the passed callContext
+     *
+     * @param account        the account to be used to connect to server
+     * @param avatarRadius   the avatar radius
+     * @param resources      reference for density information
+     * @param storageManager reference for caching purposes
+     * @param callContext    which context is called to set the generated avatar
+     */
+    public static void setAvatar(@NonNull Account account, AvatarGenerationListener listener,
+                                 float avatarRadius, Resources resources, FileDataStorageManager storageManager,
+                                 Object callContext, Context context, ImageView view) {
+
+        AccountManager accountManager = AccountManager.get(context);
+        String userId = accountManager.getUserData(account,
+                com.owncloud.android.lib.common.accounts.AccountUtils.Constants.KEY_USER_ID);
+
+        setAvatar(account, userId, listener, avatarRadius, resources, storageManager, callContext, context, view);
     }
 
     /**
@@ -468,20 +492,140 @@ public class DisplayUtils {
      */
     public static void setAvatar(@NonNull Account account, @NonNull String userId, AvatarGenerationListener listener,
                                  float avatarRadius, Resources resources, FileDataStorageManager storageManager,
-                                 Object callContext, Context context) {
+                                 Object callContext, Context context, ImageView view) {
         if (callContext instanceof View) {
             ((View) callContext).setContentDescription(account.name);
         }
 
-        // TODO glide avatare
+        // TODO glide avatar
+        AsyncTask task = new AsyncTask() {
+            GlideContainer container;
 
-//        ArbitraryDataProvider arbitraryDataProvider = new ArbitraryDataProvider(context.getContentResolver());
-//
-//        String serverName = account.name.substring(account.name.lastIndexOf('@') + 1, account.name.length());
-//        String eTag = arbitraryDataProvider.getValue(userId + "@" + serverName, ThumbnailsCacheManager.AVATAR);
-//        String avatarKey = "a_" + userId + "_" + serverName + "_" + eTag;
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                // we need to create client here, as different servers can be used
+                OwnCloudClient newClient;
+                try {
+                    OwnCloudAccount ocAccount = new OwnCloudAccount(account, context);
+                    newClient = OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount, context);
+                } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
+                    throw new IllegalStateException("Account not found");
+                } catch (Exception e) {
+                    throw new IllegalStateException("Client could not be instantiated");
+                }
+
+                int px = getAvatarDimension(context);
+                container = new GlideContainer();
+                container.url = newClient.getBaseUri() + "/index.php/avatar/" + Uri.encode(userId) + "/" + px;
+                container.client = newClient;
+                container.key = GlideKey.avatar(account, userId, context);
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                int placeholder = R.drawable.ic_user;
+
+                GlideApp.with(context)
+                        .load(container)
+                        .placeholder(placeholder)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(view);
+            }
+        };
+
+        task.execute();
+        
+        
 //
 //        // first show old one
+//        Drawable avatar = BitmapUtils.bitmapToCircularBitmapDrawable(resources,
+//                ThumbnailsCacheManager.getBitmapFromDiskCache(avatarKey));
+//
+//        // if no one exists, show colored icon with initial char
+//        if (avatar == null) {
+//            try {
+//                avatar = TextDrawable.createAvatarByUserId(userId, avatarRadius);
+//            } catch (Exception e) {
+//                Log_OC.e(TAG, "Error calculating RGB value for active account icon.", e);
+//                avatar = resources.getDrawable(R.drawable.account_circle_white);
+//            }
+//        }
+//
+//        try {
+//            String baseUrl = com.owncloud.android.lib.common.accounts.AccountUtils
+//                    .getBaseUrlForAccount(context, account);
+//            String uri = baseUrl + "/index.php/avatar/" + Uri.encode(userId) + "/" + px;
+//
+//            DisplayUtils.downloadImage(uri, R.drawable.account_circle_white, R.drawable.account_circle_white, GlideKey.avatar(), context);
+//        } catch (Exception e) {
+//            // TODO glide 
+//        }
+    }
+
+    /**
+     * fetches and sets the avatar of the given account in the passed callContext
+     *
+     * @param account        the account to be used to connect to server
+     * @param userId         the userId which avatar should be set
+     * @param avatarRadius   the avatar radius
+     * @param resources      reference for density information
+     * @param storageManager reference for caching purposes
+     * @param callContext    which context is called to set the generated avatar
+     */
+    public static void setAvatar(@NonNull Account account, @NonNull String userId, AvatarGenerationListener listener,
+                                 float avatarRadius, Resources resources, FileDataStorageManager storageManager,
+                                 Object callContext, Context context, SimpleTarget<Drawable> target) {
+        if (callContext instanceof View) {
+            ((View) callContext).setContentDescription(account.name);
+        }
+
+        // TODO glide avatar
+        AsyncTask task = new AsyncTask() {
+            GlideContainer container;
+
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                // we need to create client here, as different servers can be used
+                OwnCloudClient newClient;
+                try {
+                    OwnCloudAccount ocAccount = new OwnCloudAccount(account, context);
+                    newClient = OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount, context);
+                } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
+                    throw new IllegalStateException("Account not found");
+                } catch (Exception e) {
+                    throw new IllegalStateException("Client could not be instantiated");
+                }
+
+                int px = getAvatarDimension(context);
+                container = new GlideContainer();
+                container.url = newClient.getBaseUri() + "/index.php/avatar/" + Uri.encode(userId) + "/" + px;
+                container.client = newClient;
+                container.key = GlideKey.avatar(account, userId, context);
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                int placeholder = R.drawable.ic_user;
+
+                GlideApp.with(context)
+                        .load(container)
+                        .placeholder(placeholder)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(target);
+            }
+        };
+
+        task.execute();
+
+
+//
+//           // TODO first show old one
+        // changing avatar?
+        // fallback to TextDrawable.createAvatarByUserId(userId, avatarRadius)
 //        Drawable avatar = BitmapUtils.bitmapToCircularBitmapDrawable(resources,
 //                ThumbnailsCacheManager.getBitmapFromDiskCache(avatarKey));
 //
@@ -954,5 +1098,11 @@ public class DisplayUtils {
             display.getSize(point);
             return point;
         }
+    }
+
+    private static int getAvatarDimension(Context context) {
+        // Converts dp to pixel
+        Resources r = context.getResources();
+        return Math.round(r.getDimension(R.dimen.file_avatar_size));
     }
 }
