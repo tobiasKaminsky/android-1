@@ -1123,7 +1123,7 @@ public class FileUploader extends Service
             }
 
             // generate new Thumbnail
-            DisplayUtils.generateThumbnail(mCurrentUpload.getFile(), getBaseContext());
+            DisplayUtils.generateThumbnail(mCurrentUpload.getFile(), mCurrentUpload.getOriginalStoragePath(), getBaseContext());
         }
     }
 

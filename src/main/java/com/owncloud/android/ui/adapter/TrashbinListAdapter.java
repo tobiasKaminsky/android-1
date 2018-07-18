@@ -209,12 +209,9 @@ public class TrashbinListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 try {
                     int placeholder = MimeTypeUtil.isImage(file) ? R.drawable.file_image : R.drawable.file_movie;
 
-                    // todo glide move thumbnail uri to DisplayUtils
-                    int pxW = DisplayUtils.getThumbnailDimension();
-                    int pxH = DisplayUtils.getThumbnailDimension();
+                    int px = DisplayUtils.getThumbnailDimension();
 
-                    String url = client.getBaseUri() + "/index.php/apps/files_trashbin/preview?fileId=" +
-                            file.getLocalId() + "&x=" + pxW + "&y=" + pxH;
+                    String url = DisplayUtils.getThumbnailUri(client, file, px);
                     DisplayUtils.downloadImage(url, placeholder, placeholder, thumbnailView, client,
                             GlideKey.trashbinThumbnail(file), context);
 

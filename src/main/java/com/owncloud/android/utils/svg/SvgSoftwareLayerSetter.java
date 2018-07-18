@@ -23,8 +23,12 @@ public class SvgSoftwareLayerSetter<PictureDrawable> implements RequestListener<
     @Override
     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<PictureDrawable> target,
                                 boolean isFirstResource) {
-        ImageView view = ((ImageViewTarget<?>) target).getView();
-        view.setLayerType(ImageView.LAYER_TYPE_NONE, null);
+        try {
+            ImageView view = ((ImageViewTarget<?>) target).getView();
+            view.setLayerType(ImageView.LAYER_TYPE_NONE, null);
+        } catch (Exception e1) {
+            // TODO glide
+        }
 
         return false;
     }
@@ -32,8 +36,12 @@ public class SvgSoftwareLayerSetter<PictureDrawable> implements RequestListener<
     @Override
     public boolean onResourceReady(PictureDrawable resource, Object model, Target<PictureDrawable> target,
                                    DataSource dataSource, boolean isFirstResource) {
-        ImageView view = ((ImageViewTarget<?>) target).getView();
-        view.setLayerType(ImageView.LAYER_TYPE_NONE, null);
+        try {
+            ImageView view = ((ImageViewTarget<?>) target).getView();
+            view.setLayerType(ImageView.LAYER_TYPE_SOFTWARE, null);
+        } catch (Exception e) {
+            // TODO glide
+        }
 
         return false;
     }

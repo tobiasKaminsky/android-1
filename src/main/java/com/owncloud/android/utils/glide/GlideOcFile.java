@@ -1,16 +1,33 @@
 package com.owncloud.android.utils.glide;
 
-import com.bumptech.glide.load.model.GlideUrl;
+import com.owncloud.android.datamodel.OCFile;
 
-import java.net.URL;
+public class GlideOcFile {
+    private OCFile file;
+    private GlideOCFileType type;
+    private String path = "";
 
-public class GlideOcFile extends GlideUrl {
-    public GlideOcFile(URL url) {
-        super(url);
+    public GlideOcFile(OCFile file, GlideOCFileType type) {
+        this.file = file;
+        this.type = type;
     }
 
-    @Override
-    public String getCacheKey() {
-        return super.getCacheKey();
+    public GlideOcFile(OCFile file, GlideOCFileType type, String path) {
+        this.file = file;
+        this.type = type;
+        this.path = path;
+    }
+
+    public OCFile getFile() {
+        return file;
+    }
+
+    public GlideOCFileType getType() {
+        return type;
+    }
+
+    public String getPath() {
+        return path;
     }
 }
+

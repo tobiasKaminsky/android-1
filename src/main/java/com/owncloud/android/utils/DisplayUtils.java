@@ -70,6 +70,7 @@ import com.owncloud.android.lib.common.OwnCloudAccount;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.lib.resources.files.SearchOperation;
+import com.owncloud.android.lib.resources.files.ServerFileInterface;
 import com.owncloud.android.ui.activity.FileDisplayActivity;
 import com.owncloud.android.ui.events.MenuItemClickEvent;
 import com.owncloud.android.ui.events.SearchEvent;
@@ -77,6 +78,8 @@ import com.owncloud.android.ui.fragment.OCFileListFragment;
 import com.owncloud.android.utils.glide.GlideApp;
 import com.owncloud.android.utils.glide.GlideContainer;
 import com.owncloud.android.utils.glide.GlideKey;
+import com.owncloud.android.utils.glide.GlideOCFileType;
+import com.owncloud.android.utils.glide.GlideOcFile;
 import com.owncloud.android.utils.svg.SvgSoftwareLayerSetter;
 
 import org.greenrobot.eventbus.EventBus;
@@ -507,6 +510,7 @@ public class DisplayUtils {
                                     int error) {
         try {
             if (iconUrl.endsWith(".svg")) {
+                // TODO glide exception
                 downloadSVG(iconUrl, placeholder, error, imageView, context);
             } else {
                 downloadPNGIcon(context, iconUrl, imageView, placeholder);
@@ -527,10 +531,10 @@ public class DisplayUtils {
     }
 
     public static void downloadSVG(String url, int placeholder, int error, ImageView imageView, Context context) {
-        // todo glide do not create new every time
         GlideApp.with(context)
                 .as(PictureDrawable.class)
                 .placeholder(placeholder)
+                .fitCenter()
                 .error(error)
                 .listener(new SvgSoftwareLayerSetter<>())
                 .load(url)
@@ -540,14 +544,13 @@ public class DisplayUtils {
     // TODO glide unify with ImageView
     public static void downloadSVG(String url, int placeholder, int error, SimpleTarget<Drawable> imageView,
                                    Context context) {
-        // todo glide do not create new every time
         GlideApp.with(context)
-                // .as(PictureDrawable.class) // TODO glide needed?
+                .as(PictureDrawable.class) // TODO glide needed?
                 .load(url)
                 .placeholder(placeholder)
                 .error(error)
-                // .listener(new SvgSoftwareLayerSetter<>())
-                .into(imageView);
+                .listener(new SvgSoftwareLayerSetter<>())
+                .into((SimpleTarget) imageView);
     }
 
     public static Bitmap downloadImageSynchronous(Context context, String imageUrl) {
@@ -572,11 +575,12 @@ public class DisplayUtils {
                 .load(file)
                 .placeholder(placeholder)
                 .error(error)
-                .signature(key)
                 .into(view);
     }
 
     public static void downloadThumbnail(OCFile file, ImageView view, OwnCloudClient client, Context context) {
+        // TODO glide: first try to extract thumbnail from resized image
+        
         GlideContainer container = new GlideContainer();
 
         int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
@@ -587,6 +591,26 @@ public class DisplayUtils {
                 Uri.encode(file.getRemotePath(), "/");
         container.client = client;
         container.key = GlideKey.serverThumbnail(file);
+
+        GlideApp.with(context)
+                .load(container)
+                .placeholder(placeholder)
+                .into(view);
+    }
+
+    public static void downloadActivityThumbnail(OCFile file, ImageView view, OwnCloudClient client, Context context) {
+        // TODO glide: first try to extract thumbnail from resized image
+
+        GlideContainer container = new GlideContainer();
+
+        int placeholder = MimeTypeUtil.isVideo(file) ? R.drawable.file_movie : R.drawable.file_image;
+        int pxW = DisplayUtils.getThumbnailDimension();
+        int pxH = DisplayUtils.getThumbnailDimension();
+
+        container.url = client.getBaseUri() + "/index.php/apps/files/api/v1/thumbnail/" + pxW + "/" + pxH +
+                Uri.encode(file.getRemotePath(), "/");
+        container.client = client;
+        container.key = GlideKey.activityThumbnail(file);
 
         GlideApp.with(context)
                 .load(container)
@@ -633,6 +657,11 @@ public class DisplayUtils {
                 .into(view);
     }
 
+    public static String getThumbnailUri(OwnCloudClient client, ServerFileInterface file, int size) {
+        return client.getBaseUri() + "/index.php/apps/files_trashbin/preview?fileId=" +
+                file.getLocalId() + "&x=" + size + "&y=" + size;
+    }
+
 //    public static void showResizedImage(String uri, Drawable placeholder, Drawable error, ImageView view, OwnCloudClient client,
 //                                     Key key, Context context) {
 //        
@@ -655,7 +684,6 @@ public class DisplayUtils {
         GlideApp.with(context)
                 .load(uri)
                 .placeholder(placeholder)
-                .signature(key)
                 .error(error)
                 .into(target);
     }
@@ -665,32 +693,25 @@ public class DisplayUtils {
         int pxW = p.x;
         int pxH = p.y;
 
-        // TODO glide use Log_OC
         try {
             GlideApp.with(context)
-                    .load(file)
+                    .load(new GlideOcFile(file, GlideOCFileType.resizedImage))
                     .downloadOnly(pxW, pxH).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException e) {
+            Log_OC.e(TAG, "Thumbnail generation failed", e);
         }
     }
 
-    public static void generateThumbnail(OCFile file, Context context) {
+    public static void generateThumbnail(OCFile file, String path, Context context) {
         int pxW = DisplayUtils.getThumbnailDimension();
         int pxH = DisplayUtils.getThumbnailDimension();
 
-        // TODO glide use Log_OC
         try {
             GlideApp.with(context)
-                    .load(new File(file.getStoragePath()))
-                    .signature(GlideKey.serverThumbnail(file)) // TODO glide how to use same key as when really downloading it?
+                    .load(new GlideOcFile(file, GlideOCFileType.thumbnail, path))
                     .downloadOnly(pxW, pxH).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException e) {
+            Log_OC.e(TAG, "Thumbnail generation failed", e);
         }
     }
 

@@ -31,6 +31,10 @@ public class GlideKey {
         return new ObjectKey(THUMBNAIL + file.getRemoteId());
     }
 
+    public static ObjectKey activityThumbnail(OCFile file) {
+        return new ObjectKey(THUMBNAIL + file.getRemoteId()); // TODO if null, show placeholder
+    }
+
 //    public static ObjectKey avatar() {
 //        return new ObjectKey("a_" + userId + "_" + serverName + "_" + eTag);
 //    }

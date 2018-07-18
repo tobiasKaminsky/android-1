@@ -46,6 +46,7 @@ import com.owncloud.android.datamodel.UploadsStorageManager.UploadStatus;
 import com.owncloud.android.db.OCUpload;
 import com.owncloud.android.db.UploadResult;
 import com.owncloud.android.files.services.FileUploader;
+import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.ui.activity.FileActivity;
 import com.owncloud.android.utils.DisplayUtils;
@@ -65,6 +66,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedViewHolder> {
 
     private static final String TAG = UploadListAdapter.class.getSimpleName();
+    private OwnCloudClient client;
 
     private ProgressListener mProgressListener;
 
@@ -72,7 +74,7 @@ public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedVie
 
     private UploadsStorageManager mUploadsStorageManager;
 
-    private UploadGroup[] mUploadGroups = null;
+    private UploadGroup[] mUploadGroups;
 
     @Override
     public int getSectionCount() {
@@ -132,6 +134,9 @@ public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedVie
                 Arrays.sort(getItems(), comparator);
             }
         };
+
+        client = AccountUtils.getClientForCurrentAccount(mParentActivity);
+        
         loadUploadItemsFromDb();
     }
 
@@ -290,27 +295,27 @@ public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedVie
             itemViewHolder.itemLayout.setOnClickListener(v -> onUploadItemClick(item));
         }
 
-        OCFile fakeFileToCheatThumbnailsCacheManagerInterface = new OCFile(item.getRemotePath());
-        fakeFileToCheatThumbnailsCacheManagerInterface.setStoragePath(item.getLocalPath());
-        fakeFileToCheatThumbnailsCacheManagerInterface.setMimetype(item.getMimeType());
+        if (MimeTypeUtil.isImageOrVideo(new File(item.getLocalPath()))) {
+            if (item.getUploadStatus() == UploadStatus.UPLOAD_SUCCEEDED) {
 
-        // todo glide why is this checked?
-        //        item.getUploadStatus() == UploadStatus.UPLOAD_SUCCEEDED)) {
+                OCFile file = mParentActivity.getStorageManager().getFileByPath(item.getRemotePath());
 
-        // TODO glide if already uploaded, use OCFile / GlideKey remote Thumbnail
-        // else use local file generator
+                if (file != null) {
+                    DisplayUtils.downloadThumbnail(file, itemViewHolder.thumbnail, client, mParentActivity);
+                }
 
-        if (MimeTypeUtil.isImageOrVideo(fakeFileToCheatThumbnailsCacheManagerInterface)) {
-            File file = new File(item.getLocalPath());
+            } else {
+                File file = new File(item.getLocalPath());
 
-            int placeholder = MimeTypeUtil.isImage(fakeFileToCheatThumbnailsCacheManagerInterface) ?
-                    R.drawable.file_image : R.drawable.file_movie;
-            DisplayUtils.localImage(file, placeholder, placeholder, itemViewHolder.thumbnail,
-                    GlideKey.localFile(file), mParentActivity);
+                int placeholder = MimeTypeUtil.isImage(new File(item.getLocalPath())) ?
+                        R.drawable.file_image : R.drawable.file_movie;
+                DisplayUtils.localImage(file, placeholder, placeholder, itemViewHolder.thumbnail,
+                        GlideKey.localFile(file), mParentActivity);
 
-            if ("image/png".equalsIgnoreCase(item.getMimeType())) {
-                itemViewHolder.thumbnail.setBackgroundColor(mParentActivity.getResources()
-                        .getColor(R.color.background_color));
+                if ("image/png".equalsIgnoreCase(item.getMimeType())) {
+                    itemViewHolder.thumbnail.setBackgroundColor(mParentActivity.getResources()
+                            .getColor(R.color.background_color));
+                }
             }
         } else {
             itemViewHolder.thumbnail.setImageDrawable(MimeTypeUtil.getFileTypeIcon(item.getMimeType(), fileName,

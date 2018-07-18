@@ -228,8 +228,11 @@ public class ActivityListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         // No Folder
         if (!file.isFolder()) {
             if ((MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file))) {
-                // TODO glide activity: no etag available, if fresh started
-                DisplayUtils.downloadThumbnail(file, fileIcon, client, context);
+                if (TextUtils.isEmpty(file.getEtag())) {
+                    DisplayUtils.downloadActivityThumbnail(file, fileIcon, client, context);
+                } else {
+                    DisplayUtils.downloadThumbnail(file, fileIcon, client, context);
+                }
             } else {
                 if (isDetailView) {
                     fileIcon.setVisibility(View.GONE);

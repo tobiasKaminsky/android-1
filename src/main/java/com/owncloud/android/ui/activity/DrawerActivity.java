@@ -866,8 +866,8 @@ public abstract class DrawerActivity extends ToolbarActivity implements DisplayU
                         }
                     };
 
-                    DisplayUtils.downloadIcon(this, firstQuota.iconUrl, target, R.drawable.ic_link_grey,
-                            R.drawable.ic_link_grey);
+//                    DisplayUtils.downloadIcon(this, firstQuota.iconUrl, target, R.drawable.ic_link_grey,
+//                            R.drawable.ic_link_grey);
 
                 } else {
                     mQuotaTextLink.setVisibility(View.GONE);

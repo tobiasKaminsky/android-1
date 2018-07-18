@@ -281,6 +281,10 @@ public class MimeTypeUtil {
         return isImage(file) || isVideo(file);
     }
 
+    public static boolean isImageOrVideo(File file) {
+        return isImage(file) || isVideo(file);
+    }
+
     /**
      * @param file the file to be analyzed
      * @return 'True' if the file is simple text (e.g. not application-dependent, like .doc or .docx)
