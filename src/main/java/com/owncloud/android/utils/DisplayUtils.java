@@ -63,7 +63,6 @@ import com.bumptech.glide.load.Key;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.signature.ObjectKey;
 import com.owncloud.android.MainApp;
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
@@ -80,6 +79,7 @@ import com.owncloud.android.ui.events.MenuItemClickEvent;
 import com.owncloud.android.ui.events.SearchEvent;
 import com.owncloud.android.ui.fragment.OCFileListFragment;
 import com.owncloud.android.utils.glide.GlideApp;
+import com.owncloud.android.utils.glide.GlideAvatar;
 import com.owncloud.android.utils.glide.GlideContainer;
 import com.owncloud.android.utils.glide.GlideKey;
 import com.owncloud.android.utils.glide.GlideOCFileType;
@@ -108,7 +108,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -586,22 +585,25 @@ public class DisplayUtils {
 
                 Drawable failback = null;
                 try {
-                    // TODO correct size, everytime created?
+                    // TODO every time created?
                     failback = TextDrawable.createAvatar(account.name, radius);
                 } catch (NoSuchAlgorithmException e) {
 
                 }
 
 
-                GlideApp.with(context)
-                        .asBitmap()
-//                            .load(new GlideAvatar(GlideKey.avatar(account, userId, context), inputStream))
-                        .load(new ObjectKey(new Random().nextLong()))
-                        .apply(RequestOptions.circleCropTransform())
-                        .placeholder(placeholder)
-                        .error(failback)
-                        .onlyRetrieveFromCache(inputStream == null)
-                        .into(view);
+                try {
+                    GlideApp.with(context)
+                            .asBitmap()
+                            .load(new GlideAvatar(GlideKey.avatar(account, userId, context), inputStream))
+                            .apply(RequestOptions.circleCropTransform())
+                            .placeholder(placeholder)
+                            .error(failback)
+                            .onlyRetrieveFromCache(inputStream == null)
+                            .into(view);
+                } catch (Exception e) {
+                    // TODO glide
+                }
             }
         };
 
@@ -615,6 +617,7 @@ public class DisplayUtils {
      * @param userId         the userId which avatar should be set
      * @param target         where the image is shown in
      */
+    // TODO combine with better approach (eTag)
     public static void setAvatar(@NonNull Account account, @NonNull String userId, Context context,
                                  SimpleTarget<Drawable> target) {
         AsyncTask task = new AsyncTask() {
@@ -638,12 +641,16 @@ public class DisplayUtils {
             protected void onPostExecute(Object o) {
                 int placeholder = R.drawable.ic_user;
 
-                GlideApp.with(context)
-                        .load(container)
-                        .placeholder(placeholder)
-                        .error(R.drawable.ic_list_empty_error)
-                        .apply(RequestOptions.circleCropTransform())
-                        .into(target);
+                try {
+                    GlideApp.with(context)
+                            .load(container)
+                            .placeholder(placeholder)
+                            .error(R.drawable.ic_list_empty_error)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(target);
+                } catch (Exception e) {
+                    // TODO glide
+                }
             }
         };
 
