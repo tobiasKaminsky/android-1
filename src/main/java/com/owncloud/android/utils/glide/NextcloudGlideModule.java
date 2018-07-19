@@ -24,6 +24,7 @@ public class NextcloudGlideModule extends AppGlideModule {
         registry.prepend(GlideContainer.class, InputStream.class, new GlideContainerModelLoaderFactory());
         registry.prepend(GlideOcFile.class, InputStream.class, new OCFileModelLoaderFactory());
         registry.prepend(String.class, InputStream.class, new StringModelLoaderFactory());
+        registry.prepend(GlideAvatar.class, InputStream.class, new AvatarModelLoaderFactory());
         registry.register(SVG.class, PictureDrawable.class, new SvgDrawableTranscoder())
                 .append(InputStream.class, SVG.class, new SvgDecoder());
     }

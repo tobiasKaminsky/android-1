@@ -151,11 +151,8 @@ public class AccountListAdapter extends ArrayAdapter<AccountListItem> implements
 
     private void setAvatar(AccountViewHolderItem viewHolder, Account account) {
         try {
-            ImageView viewItem = viewHolder.imageViewItem;
-
             // TODO glide error handling in glide?
-            DisplayUtils.setAvatar(account, this, mAccountAvatarRadiusDimension, mContext.getResources(),
-                    mContext.getStorageManager(), viewItem, mContext, viewItem);
+            DisplayUtils.setAvatar(account, mContext, viewHolder.imageViewItem, mAccountAvatarRadiusDimension);
         } catch (Exception e) {
             Log_OC.e(TAG, "Error calculating RGB value for account list item.", e);
             // use user icon as a fallback

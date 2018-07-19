@@ -50,12 +50,13 @@ public class HttpStreamGlideContainerFetcher implements DataFetcher<InputStream>
         Log_OC.d(TAG, "load thumbnail for: " + container.url);
 
         // TODO glide centralize all urls
-        
-        GetMethod get = null;
+
+        GetMethod get;
         try {
             get = new GetMethod(container.url);
             get.setRequestHeader("Cookie", "nc_sameSiteCookielax=true;nc_sameSiteCookiestrict=true");
             get.setRequestHeader(RemoteOperation.OCS_API_HEADER, RemoteOperation.OCS_API_HEADER_VALUE);
+
             int status = container.client.executeMethod(get);
             if (status == HttpStatus.SC_OK) {
                 callback.onDataReady(get.getResponseBodyAsStream());

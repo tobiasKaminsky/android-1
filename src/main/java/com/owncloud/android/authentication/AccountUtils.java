@@ -229,4 +229,15 @@ public class AccountUtils {
             throw new IllegalStateException("Client could not be instantiated");
         }
     }
+
+    public static OwnCloudClient getClientForAccount(Account account, Context context) {
+        try {
+            OwnCloudAccount ocAccount = new OwnCloudAccount(account, context);
+            return OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount, context);
+        } catch (com.owncloud.android.lib.common.accounts.AccountUtils.AccountNotFoundException e) {
+            throw new IllegalStateException("Account not found");
+        } catch (Exception e) {
+            throw new IllegalStateException("Client could not be instantiated");
+        }
+    }
 }
