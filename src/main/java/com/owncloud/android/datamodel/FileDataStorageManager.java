@@ -2113,8 +2113,11 @@ public class FileDataStorageManager {
                     c.getInt(c.getColumnIndex(ProviderTableMeta.CAPABILITIES_ACTIVITY))));
             capability.setRichDocuments(CapabilityBooleanType.fromValue(c.getInt(
                     c.getColumnIndex(ProviderTableMeta.CAPABILITIES_RICHDOCUMENT))));
-            capability.setRichDocumentsMimeTypeList(Arrays.asList(c.getString(
-                    c.getColumnIndex(ProviderTableMeta.CAPABILITIES_RICHDOCUMENT_MIMETYPE_LIST)).split(",")));
+            String mimetypes = c.getString(c.getColumnIndex(ProviderTableMeta.CAPABILITIES_RICHDOCUMENT_MIMETYPE_LIST));
+            if (mimetypes == null) {
+                mimetypes = "";
+            }
+            capability.setRichDocumentsMimeTypeList(Arrays.asList(mimetypes.split(",")));
         }
         return capability;
     }
