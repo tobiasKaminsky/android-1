@@ -58,6 +58,7 @@ import com.owncloud.android.lib.resources.files.FileVersion;
 import com.owncloud.android.lib.resources.shares.OCShare;
 import com.owncloud.android.lib.resources.shares.ShareType;
 import com.owncloud.android.lib.resources.status.OCCapability;
+import com.owncloud.android.operations.RichDocumentsUrlOperation;
 import com.owncloud.android.operations.SynchronizeFileOperation;
 import com.owncloud.android.services.OperationsService;
 import com.owncloud.android.ui.activity.ConflictsResolveActivity;
@@ -310,16 +311,28 @@ public class FileOperationsHelper {
     }
 
     public void openFileAsRichDocument(OCFile file, Context context) {
-        Intent collaboraWebViewIntent = new Intent(context, RichDocumentsWebView.class);
+        // mFileActivity.showLoadingDialog(mFileActivity.getString(R.string.wait_a_moment));
 
-//        String url = "https://collabora-test.nextcloud.com/apps/richdocuments/direct/SxGVUwtwikCyXWRoVECStVZAeKWDt9ULWqDgw3dyaW5d2ZevHcjcUGcFuYtfGeBu";
-        String url = "http://10.0.2.2/test.html";
+        new Thread(() -> {
+            Account account = AccountUtils.getCurrentOwnCloudAccount(mFileActivity);
+            RichDocumentsUrlOperation richDocumentsUrlOperation = new RichDocumentsUrlOperation(file.getLocalId());
+            RemoteOperationResult result = richDocumentsUrlOperation.execute(account, mFileActivity);
 
-        collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
-        collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, url);
-        collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
-        // collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_MENU_ITEM_ID, menuItem.getItemId());
-        context.startActivity(collaboraWebViewIntent);
+            mFileActivity.dismissLoadingDialog();
+
+            if (!result.isSuccess()) {
+                DisplayUtils.showSnackMessage(mFileActivity, R.string.richdocument_not_possible_headline);
+                return;
+            }
+
+            Intent collaboraWebViewIntent = new Intent(context, RichDocumentsWebView.class);
+            String uri = (String) result.getData().get(0);
+
+            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
+            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, uri);
+            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
+            context.startActivity(collaboraWebViewIntent);
+        }).start();
     }
 
     @NonNull
