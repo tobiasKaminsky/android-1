@@ -118,12 +118,12 @@ android {
         productFlavors {
             // used for f-droid
             generic {
-                applicationId 'com.nextcloud.client'
+                applicationId 'com.nextcloud.client.cool'
                 dimension "default"
             }
 
             gplay {
-                applicationId 'com.nextcloud.client'
+                applicationId 'com.nextcloud.client.cool'
                 dimension "default"
             }
 

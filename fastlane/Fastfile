@@ -4,3 +4,77 @@ fastlane_version "2.58.0"
 lane :screenshots do
   screengrab
 end
+
+desc "Do complete release: tag, make gplay/generic, upload gplay to playstore. Call with \"fastlane release tag:stable-3.2.1\""
+lane :release do |options|
+    tag(options)
+    playstore()
+    makeReleases()
+    dropIt()
+end
+
+desc "upload Generic release to dropIt"
+lane :dropIt do
+    sh("/home/tobi/bin/pasteNCdirect /tmp/release/nextcloud*")
+end    
+
+desc "Tag a release: stable-3.1.0 or rc-3.1.0-01. Call with \"fastlane tag tag:Tagname\""
+lane :tag do |options|
+    add_git_tag(
+        tag: options[:tag],
+        sign: true
+    )
+    push_git_tags()
+end
+
+desc "Makes gplay and generic releases in /tmp/releases/"
+lane :makeReleases do
+    sh("mkdir -p /tmp/release")
+    sh("rm /tmp/release/*")
+    
+    GenericSignedRelease()
+    sh("cp ../build/outputs/apk/generic/release/*.apk /tmp/release/")
+    sh("rename 'generic-release' 'nextcloud' /tmp/release/generic-release*")
+    
+    GplaySignedRelease()
+    sh("cp ../build/outputs/apk/gplay/release/*.apk /tmp/release/")
+end
+
+desc "Make gplay & upload to play store"
+lane :playstore do
+    GplaySignedRelease()
+    
+    upload_to_play_store(
+        skip_upload_images: true
+    )
+end
+  
+lane :GenericSignedRelease do
+    gradle(
+        task: 'assemble',
+        flavor: 'Generic',
+        build_type: 'Release',
+        print_command: false,
+        properties: {
+              "android.injected.signing.store.file" => '/home/tobi/nextcloud/arbeit/nextcloud/Google Play Store/android_keystore 2.jks',
+              "android.injected.signing.store.password" => "CXWqoVYXZAknievj42mjvmWrLkYt",
+              "android.injected.signing.key.alias" => "nextcloud android key",
+              "android.injected.signing.key.password" => "CXWqoVYXZAknievj42mjvmWrLkYt",
+            }
+        )
+end
+
+lane :GplaySignedRelease do
+    gradle(
+        task: 'assemble',
+        flavor: 'Gplay',
+        build_type: 'Release',
+        print_command: false,
+        properties: {
+              "android.injected.signing.store.file" => '/home/tobi/nextcloud/arbeit/nextcloud/Google Play Store/android_keystore 2.jks',
+              "android.injected.signing.store.password" => "CXWqoVYXZAknievj42mjvmWrLkYt",
+              "android.injected.signing.key.alias" => "nextcloud android key",
+              "android.injected.signing.key.password" => "CXWqoVYXZAknievj42mjvmWrLkYt",
+            }
+        )
+end
