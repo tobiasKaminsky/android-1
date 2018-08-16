@@ -30,7 +30,7 @@ end
 desc "Makes gplay and generic releases in /tmp/releases/"
 lane :makeReleases do
     sh("mkdir -p /tmp/release")
-    sh("rm /tmp/release/*")
+    sh("rm -rf /tmp/release/*")
     
     GenericSignedRelease()
     sh("cp ../build/outputs/apk/generic/release/*.apk /tmp/release/")
