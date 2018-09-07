@@ -252,6 +252,19 @@ public class FileOperationsHelper {
             List<ResolveInfo> launchables = mFileActivity.getPackageManager().
                     queryIntentActivities(openFileWithIntent, PackageManager.GET_RESOLVED_FILTER);
 
+            if (launchables.isEmpty()) {
+                Account account = mFileActivity.getAccount();
+                OCCapability capability = mFileActivity.getStorageManager().getCapability(account.name);
+                if (capability.getRichDocumentsMimeTypeList().contains(file.getMimeType())) {
+                    openFileAsRichDocument(file, mFileActivity);
+                    return;
+                } else {
+                    DisplayUtils.showSnackMessage(mFileActivity, R.string.file_list_no_app_for_file_type);
+                    return;
+                }
+            }
+            ; 
+            
             mFileActivity.showLoadingDialog(mFileActivity.getResources().getString(R.string.sync_in_progress));
             new Thread(new Runnable() {
                 @Override
@@ -275,7 +288,7 @@ public class FileOperationsHelper {
                         i.putExtra(ConflictsResolveActivity.EXTRA_ACCOUNT, account);
                         mFileActivity.startActivity(i);
                     } else {
-                        if (launchables != null && launchables.size() > 0) {
+                        if (!launchables.isEmpty()) {
                             try {
                                 if (!result.isSuccess()) {
                                     DisplayUtils.showSnackMessage(mFileActivity, R.string.file_not_synced);
@@ -311,14 +324,13 @@ public class FileOperationsHelper {
     }
 
     public void openFileAsRichDocument(OCFile file, Context context) {
-        // mFileActivity.showLoadingDialog(mFileActivity.getString(R.string.wait_a_moment));
+        mFileActivity.showLoadingDialog(mFileActivity.getString(R.string.wait_a_moment));
 
         new Thread(() -> {
             Account account = AccountUtils.getCurrentOwnCloudAccount(mFileActivity);
             RichDocumentsUrlOperation richDocumentsUrlOperation = new RichDocumentsUrlOperation(file.getLocalId());
             RemoteOperationResult result = richDocumentsUrlOperation.execute(account, mFileActivity);
 
-            mFileActivity.dismissLoadingDialog();
 
             if (!result.isSuccess()) {
                 DisplayUtils.showSnackMessage(mFileActivity, R.string.richdocument_not_possible_headline);
@@ -327,10 +339,12 @@ public class FileOperationsHelper {
 
             Intent collaboraWebViewIntent = new Intent(context, RichDocumentsWebView.class);
             String uri = (String) result.getData().get(0);
+//            uri = "http://10.0.2.2/test.html";
 
             collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
             collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, uri);
             collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
+            mFileActivity.dismissLoadingDialog();
             context.startActivity(collaboraWebViewIntent);
         }).start();
     }

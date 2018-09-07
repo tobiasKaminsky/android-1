@@ -76,7 +76,7 @@ public class FolderPickerActivity extends FileActivity implements FileFragment.C
 
     private static final String TAG = FolderPickerActivity.class.getSimpleName();
 
-    private static final String TAG_LIST_OF_FOLDERS = "LIST_OF_FOLDERS";
+    protected static final String TAG_LIST_OF_FOLDERS = "LIST_OF_FOLDERS";
        
     private boolean mSyncInProgress;
 
@@ -93,8 +93,11 @@ public class FolderPickerActivity extends FileActivity implements FileFragment.C
 
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.files_folder_picker);
-
+        if (this instanceof FilePickerActivity) {
+            setContentView(R.layout.files_picker);
+        } else {
+            setContentView(R.layout.files_folder_picker);
+        }
 
         // sets callback listeners for UI elements
         initControls();
@@ -181,7 +184,7 @@ public class FolderPickerActivity extends FileActivity implements FileFragment.C
         return this;
     }
 
-    private void createFragments() {
+    protected void createFragments() {
         OCFileListFragment listOfFiles = new OCFileListFragment();
         Bundle args = new Bundle();
         args.putBoolean(OCFileListFragment.ARG_ONLY_FOLDERS_CLICKABLE, true);
@@ -398,8 +401,11 @@ public class FolderPickerActivity extends FileActivity implements FileFragment.C
         mCancelBtn = findViewById(R.id.folder_picker_btn_cancel);
         mCancelBtn.setOnClickListener(this);
         mChooseBtn = findViewById(R.id.folder_picker_btn_choose);
-        mChooseBtn.getBackground().setColorFilter(ThemeUtils.primaryColor(this, true), PorterDuff.Mode.SRC_ATOP);
-        mChooseBtn.setOnClickListener(this);
+
+        if (mChooseBtn != null) {
+            mChooseBtn.getBackground().setColorFilter(ThemeUtils.primaryColor(this, true), PorterDuff.Mode.SRC_ATOP);
+            mChooseBtn.setOnClickListener(this);
+        }
     }
     
     @Override

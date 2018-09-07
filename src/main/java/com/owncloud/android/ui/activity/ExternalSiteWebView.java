@@ -56,6 +56,8 @@ public class ExternalSiteWebView extends FileActivity {
     private boolean showSidebar;
     private int menuItemId;
     protected WebView webview;
+    protected int webViewLayout = R.layout.externalsite_webview;
+    String url;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -64,7 +66,7 @@ public class ExternalSiteWebView extends FileActivity {
 
         Bundle extras = getIntent().getExtras();
         String title = extras.getString(EXTRA_TITLE);
-        String url = extras.getString(EXTRA_URL);
+        url = extras.getString(EXTRA_URL);
         menuItemId = extras.getInt(EXTRA_MENU_ITEM_ID);
         showSidebar = extras.getBoolean(EXTRA_SHOW_SIDEBAR);
 
@@ -75,7 +77,8 @@ public class ExternalSiteWebView extends FileActivity {
         }
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.externalsite_webview);
+
+        setContentView(webViewLayout);
 
         webview = findViewById(R.id.webView);
         final WebSettings webSettings = webview.getSettings();
