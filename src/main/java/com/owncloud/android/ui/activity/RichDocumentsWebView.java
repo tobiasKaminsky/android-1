@@ -5,9 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -34,40 +31,8 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.collabora_menu, menu);
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_send_share_file) {
-            openShareDialog();
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
-    }
-
-    //    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // webview.evaluateJavascript("window.RichDocumentsMobileInterface.insertGraphic('http://)", null);
-//        String url = "";
-//        webview.evaluateJavascript("OCA.RichDocuments.documentsMain.postAsset('Coast.jpg', '" + url + "');",
-//                new ValueCallback<String>() {
-//                    @Override
-//                    public void onReceiveValue(String value) {
-//                        Log_OC.d(TAG, value);
-//                    }
-//                });
-//
-//        return true;
-//    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
+        showToolbar = false;
         webViewLayout = R.layout.richdocuments_webview;
         super.onCreate(savedInstanceState);
 

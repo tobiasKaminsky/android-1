@@ -31,9 +31,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <include
-            layout="@layout/toolbar_standard"/>
-
         <ProgressBar
             android:id="@+id/progressBar2"
             style="?android:attr/progressBarStyle"

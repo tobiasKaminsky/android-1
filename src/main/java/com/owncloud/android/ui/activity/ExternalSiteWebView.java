@@ -49,11 +49,13 @@ public class ExternalSiteWebView extends FileActivity {
     public static final String EXTRA_TITLE = "TITLE";
     public static final String EXTRA_URL = "URL";
     public static final String EXTRA_SHOW_SIDEBAR = "SHOW_SIDEBAR";
+    public static final String EXTRA_SHOW_TOOLBAR = "SHOW_TOOLBAR";
     public static final String EXTRA_MENU_ITEM_ID = "MENU_ITEM_ID";
 
     private static final String TAG = ExternalSiteWebView.class.getSimpleName();
 
     private boolean showSidebar;
+    protected boolean showToolbar;
     private int menuItemId;
     protected WebView webview;
     protected int webViewLayout = R.layout.externalsite_webview;
@@ -88,7 +90,9 @@ public class ExternalSiteWebView extends FileActivity {
         webview.setClickable(true);
 
         // setup toolbar
-        setupToolbar();
+        if (showToolbar) {
+            setupToolbar();
+        }
 
         // setup drawer
         setupDrawer(menuItemId);
@@ -134,11 +138,13 @@ public class ExternalSiteWebView extends FileActivity {
 
         final ProgressBar progressBar = findViewById(R.id.progressBar);
 
-        webview.setWebChromeClient(new WebChromeClient() {
-            public void onProgressChanged(WebView view, int progress) {
-                progressBar.setProgress(progress * 1000);
-            }
-        });
+        if (progressBar != null) {
+            webview.setWebChromeClient(new WebChromeClient() {
+                public void onProgressChanged(WebView view, int progress) {
+                    progressBar.setProgress(progress * 1000);
+                }
+            });
+        }
 
         webview.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
