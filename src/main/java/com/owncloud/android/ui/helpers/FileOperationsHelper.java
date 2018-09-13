@@ -343,6 +343,7 @@ public class FileOperationsHelper {
 
             collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
             collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, uri);
+            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_FILE, file);
             collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
             mFileActivity.dismissLoadingDialog();
             context.startActivity(collaboraWebViewIntent);

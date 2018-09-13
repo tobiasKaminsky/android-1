@@ -1,6 +1,7 @@
 package com.owncloud.android.ui.activity;
 
 import android.accounts.Account;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -8,13 +9,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
-import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.datamodel.OCFile;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.operations.RichDocumentsCreateAssetOperation;
@@ -23,12 +25,13 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
 
     private static final String TAG = RichDocumentsWebView.class.getSimpleName();
 
-    private static final int FILECHOOSER_RESULTCODE = 2888;
+    private static final int REQUEST_REMOTE_FILE = 100;
+    public static final int REQUEST_LOCAL_FILE = 101;
 
-    private ValueCallback<Uri> mUploadMessage;
-    private Uri mCapturedImageURI = null;
     private ProgressBar progressBar;
+    private OCFile file;
 
+    public ValueCallback<Uri[]> uploadMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +40,8 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
         super.onCreate(savedInstanceState);
 
         progressBar = findViewById(R.id.progressBar2);
+
+        file = getIntent().getParcelableExtra(EXTRA_FILE);
 
         webview.addJavascriptInterface(new RichDocumentsMobileInterface(), "RichDocumentsMobileInterface");
 
@@ -54,17 +59,47 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
                 super.onPageFinished(view, url);
             }
         });
+
+        webview.setWebChromeClient(new WebChromeClient() {
+            RichDocumentsWebView activity = RichDocumentsWebView.this;
+
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
+                                             FileChooserParams fileChooserParams) {
+                // make sure there is no existing message
+                if (uploadMessage != null) {
+                    uploadMessage.onReceiveValue(null);
+                    uploadMessage = null;
+                }
+
+                activity.uploadMessage = filePathCallback;
+
+                Intent intent = fileChooserParams.createIntent();
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                try {
+                    activity.startActivityForResult(intent, REQUEST_LOCAL_FILE);
+                } catch (ActivityNotFoundException e) {
+                    uploadMessage = null;
+                    Toast.makeText(getBaseContext(), "Cannot open file chooser", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+
+                return true;
+            }
+        });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
     }
 
     private void openFileChooser() {
         Intent action = new Intent(this, FilePickerActivity.class);
-//        startActivityForResult(action, FileDisplayActivity.REQUEST_CODE__MOVE_FILES);
-        startActivityForResult(action, 123);
+        startActivityForResult(action, REQUEST_REMOTE_FILE);
     }
 
     private void openShareDialog() {
-        FileDataStorageManager fileDataStorageManager = new FileDataStorageManager(getAccount(), getContentResolver());
-        OCFile file = fileDataStorageManager.getFileByPath("/Photos/Coast.jpg");
         Intent intent = new Intent(this, ShareActivity.class);
         intent.putExtra(FileActivity.EXTRA_FILE, file);
         intent.putExtra(FileActivity.EXTRA_ACCOUNT, getAccount());
@@ -78,6 +113,33 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
             return;
         }
 
+        switch (requestCode) {
+            case REQUEST_LOCAL_FILE:
+                handleLocalFile(data, resultCode);
+                break;
+
+            case REQUEST_REMOTE_FILE:
+                handleRemoteFile(data);
+                break;
+
+            default:
+                // unexpected, do nothing
+                break;
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void handleLocalFile(Intent data, int resultCode) {
+        if (uploadMessage == null) {
+            return;
+        }
+
+        uploadMessage.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+        uploadMessage = null;
+    }
+
+    private void handleRemoteFile(Intent data) {
         OCFile file = data.getParcelableExtra(FolderPickerActivity.EXTRA_FILES);
 
         new Thread(() -> {
@@ -88,13 +150,12 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
             if (result.isSuccess()) {
                 String asset = (String) result.getData().get(0);
 
-                runOnUiThread(() -> webview.evaluateJavascript("OCA.RichDocuments.documentsMain.postAsset('" + file.getFileName() + "', '" + asset + "');", null));
+                runOnUiThread(() -> webview.evaluateJavascript("OCA.RichDocuments.documentsMain.postAsset('" +
+                        file.getFileName() + "', '" + asset + "');", null));
             } else {
                 // todo
             }
         }).start();
-
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -115,27 +176,11 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
             runOnUiThread(RichDocumentsWebView.this::finish);
         }
 
-
-//        @JavascriptInterface
-//        public void openLocalFileChooser() {
-//            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//            intent.setType("*/*");
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//
-//            try {
-//                startActivityForResult(
-//                        Intent.createChooser(intent, "Select a File to Upload"),
-//                        123);
-//            } catch (android.content.ActivityNotFoundException ex) {
-//                // Potentially direct the user to the Market with a Dialog
-//                Toast.makeText(getApplicationContext(), "Please install a File Manager.",
-//                        Toast.LENGTH_SHORT).show();
-//            }
-//        }
-
         @JavascriptInterface
         public void insertGraphic() {
-            openFileChooser();
+//            openFileChooser();
+
+            openShareDialog();
         }
     }
 }
