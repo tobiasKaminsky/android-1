@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -12,14 +13,24 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.datamodel.OCFile;
+import com.owncloud.android.datamodel.ThumbnailsCacheManager;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
+import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.operations.RichDocumentsCreateAssetOperation;
+import com.owncloud.android.operations.RichDocumentsUrlOperation;
+import com.owncloud.android.utils.MimeTypeUtil;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 public class RichDocumentsWebView extends ExternalSiteWebView {
 
@@ -28,10 +39,19 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
     private static final int REQUEST_REMOTE_FILE = 100;
     public static final int REQUEST_LOCAL_FILE = 101;
 
-    private ProgressBar progressBar;
+    private Unbinder unbinder;
     private OCFile file;
 
     public ValueCallback<Uri[]> uploadMessage;
+
+    @BindView(R.id.progressBar2)
+    ProgressBar progressBar;
+
+    @BindView(R.id.thumbnail)
+    ImageView thumbnail;
+
+    @BindView(R.id.filename)
+    TextView fileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,22 +59,20 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
         webViewLayout = R.layout.richdocuments_webview;
         super.onCreate(savedInstanceState);
 
-        progressBar = findViewById(R.id.progressBar2);
+        unbinder = ButterKnife.bind(this);
 
         file = getIntent().getParcelableExtra(EXTRA_FILE);
 
+        setThumbnail(file, thumbnail);
+        fileName.setText(file.getFileName());
+
         webview.addJavascriptInterface(new RichDocumentsMobileInterface(), "RichDocumentsMobileInterface");
+
 
         webview.setWebViewClient(new WebViewClient() {
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                webview.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
             public void onPageFinished(WebView view, String url) {
                 webview.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
 
                 super.onPageFinished(view, url);
             }
@@ -87,6 +105,67 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
                 return true;
             }
         });
+
+        // load url in background
+        new LoadUrl(this, getAccount()).execute(file.getLocalId());
+
+    }
+
+    private void setThumbnail(OCFile file, ImageView thumbnailView) {
+        // Todo minimize: only icon by mimetype
+
+        if (file.isFolder()) {
+            thumbnailView.setImageDrawable(MimeTypeUtil.getFolderTypeIcon(file.isSharedWithMe() ||
+                            file.isSharedWithSharee(), file.isSharedViaLink(), file.isEncrypted(), file.getMountType(),
+                    this));
+        } else {
+            if ((MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file)) && file.getRemoteId() != null) {
+                // Thumbnail in cache?
+                Bitmap thumbnail = ThumbnailsCacheManager.getBitmapFromDiskCache(
+                        ThumbnailsCacheManager.PREFIX_THUMBNAIL + String.valueOf(file.getRemoteId())
+                );
+
+                if (thumbnail != null && !file.needsUpdateThumbnail()) {
+                    if (MimeTypeUtil.isVideo(file)) {
+                        Bitmap withOverlay = ThumbnailsCacheManager.addVideoOverlay(thumbnail);
+                        thumbnailView.setImageBitmap(withOverlay);
+                    } else {
+                        thumbnailView.setImageBitmap(thumbnail);
+                    }
+                } else {
+                    // generate new thumbnail
+                    if (ThumbnailsCacheManager.cancelPotentialThumbnailWork(file, thumbnailView)) {
+                        try {
+                            final ThumbnailsCacheManager.ThumbnailGenerationTask task =
+                                    new ThumbnailsCacheManager.ThumbnailGenerationTask(thumbnailView,
+                                            getStorageManager(), getAccount());
+
+                            if (thumbnail == null) {
+                                if (MimeTypeUtil.isVideo(file)) {
+                                    thumbnail = ThumbnailsCacheManager.mDefaultVideo;
+                                } else {
+                                    thumbnail = ThumbnailsCacheManager.mDefaultImg;
+                                }
+                            }
+                            final ThumbnailsCacheManager.AsyncThumbnailDrawable asyncDrawable =
+                                    new ThumbnailsCacheManager.AsyncThumbnailDrawable(getResources(), thumbnail, task);
+                            thumbnailView.setImageDrawable(asyncDrawable);
+                            task.execute(new ThumbnailsCacheManager.ThumbnailGenerationTaskObject(file,
+                                    file.getRemoteId()));
+                        } catch (IllegalArgumentException e) {
+                            Log_OC.d(TAG, "ThumbnailGenerationTask : " + e.getMessage());
+                        }
+                    }
+                }
+
+                if ("image/png".equalsIgnoreCase(file.getMimeType())) {
+                    thumbnailView.setBackgroundColor(getResources().getColor(R.color.background_color));
+                }
+            } else {
+                thumbnailView.setImageDrawable(MimeTypeUtil.getFileTypeIcon(file.getMimeType(), file.getFileName(),
+                        getAccount(), this));
+            }
+        }
     }
 
     @Override
@@ -170,6 +249,21 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
         super.onRestoreInstanceState(savedInstanceState);
     }
 
+    @Override
+    protected void onDestroy() {
+        unbinder.unbind();
+
+        super.onDestroy();
+    }
+
+    private void hideLoading() {
+        // todo execute via bridge
+        thumbnail.setVisibility(View.GONE);
+        fileName.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
+        webview.setVisibility(View.VISIBLE);
+    }
+
     private class RichDocumentsMobileInterface {
         @JavascriptInterface
         public void close() {
@@ -178,9 +272,45 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
 
         @JavascriptInterface
         public void insertGraphic() {
-//            openFileChooser();
+            openFileChooser();
+        }
 
+        @JavascriptInterface
+        public void share() {
             openShareDialog();
+        }
+    }
+
+    private static class LoadUrl extends AsyncTask<String, Void, String> {
+
+        private Account account;
+        private RichDocumentsWebView richDocumentsWebView;
+
+        public LoadUrl(RichDocumentsWebView richDocumentsWebView, Account account) {
+            this.account = account;
+            this.richDocumentsWebView = richDocumentsWebView;
+        }
+
+        @Override
+        protected String doInBackground(String... fileId) {
+            RichDocumentsUrlOperation richDocumentsUrlOperation = new RichDocumentsUrlOperation(fileId[0]);
+            RemoteOperationResult result = richDocumentsUrlOperation.execute(account, richDocumentsWebView);
+
+            if (!result.isSuccess()) {
+                return "";
+            }
+
+            return (String) result.getData().get(0);
+        }
+
+        @Override
+        protected void onPostExecute(String url) {
+            if (!url.isEmpty()) {
+                richDocumentsWebView.webview.loadUrl(url);
+                richDocumentsWebView.hideLoading(); // TODO remove afterwards
+            } else {
+                // TODO show snackbar & close 
+            }
         }
     }
 }
