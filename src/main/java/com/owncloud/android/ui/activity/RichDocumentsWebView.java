@@ -26,12 +26,15 @@ import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.operations.RichDocumentsCreateAssetOperation;
 import com.owncloud.android.operations.RichDocumentsUrlOperation;
+import com.owncloud.android.ui.fragment.OCFileListFragment;
+import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
+// TODO check minimum android version
 public class RichDocumentsWebView extends ExternalSiteWebView {
 
     private static final String TAG = RichDocumentsWebView.class.getSimpleName();
@@ -84,7 +87,6 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
                                              FileChooserParams fileChooserParams) {
-                // make sure there is no existing message
                 if (uploadMessage != null) {
                     uploadMessage.onReceiveValue(null);
                     uploadMessage = null;
@@ -93,6 +95,7 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
                 activity.uploadMessage = filePathCallback;
 
                 Intent intent = fileChooserParams.createIntent();
+                intent.setType("image/*");
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 try {
                     activity.startActivityForResult(intent, REQUEST_LOCAL_FILE);
@@ -175,6 +178,7 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
 
     private void openFileChooser() {
         Intent action = new Intent(this, FilePickerActivity.class);
+        action.putExtra(OCFileListFragment.ARG_MIMETYPE, "image/");
         startActivityForResult(action, REQUEST_REMOTE_FILE);
     }
 
@@ -232,7 +236,7 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
                 runOnUiThread(() -> webview.evaluateJavascript("OCA.RichDocuments.documentsMain.postAsset('" +
                         file.getFileName() + "', '" + asset + "');", null));
             } else {
-                // todo
+                runOnUiThread(() -> DisplayUtils.showSnackMessage(this, "Inserting image failed!"));
             }
         }).start();
     }
@@ -309,7 +313,9 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
                 richDocumentsWebView.webview.loadUrl(url);
                 richDocumentsWebView.hideLoading(); // TODO remove afterwards
             } else {
-                // TODO show snackbar & close 
+                Toast.makeText(richDocumentsWebView.getApplicationContext(),
+                        R.string.richdocuments_failed_to_load_document, Toast.LENGTH_LONG).show();
+                richDocumentsWebView.finish();
             }
         }
     }

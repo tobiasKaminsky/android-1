@@ -491,14 +491,13 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     /**
      * Change the adapted directory for a new one
-     *
-     * @param directory             New folder to adapt. Can be NULL, meaning
+     *  @param directory             New folder to adapt. Can be NULL, meaning
      *                              "no content to adapt".
      * @param updatedStorageManager Optional updated storage manager; used to replace
-     *                              mStorageManager if is different (and not NULL)
+     * @param limitToMimeType
      */
     public void swapDirectory(OCFile directory, FileDataStorageManager updatedStorageManager,
-                              boolean onlyOnDevice) {
+                              boolean onlyOnDevice, String limitToMimeType) {
         if (updatedStorageManager != null && !updatedStorageManager.equals(mStorageManager)) {
             mStorageManager = updatedStorageManager;
             mAccount = AccountUtils.getCurrentOwnCloudAccount(mContext);
@@ -508,6 +507,9 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
             if (!PreferenceManager.showHiddenFilesEnabled(mContext)) {
                 mFiles = filterHiddenFiles(mFiles);
+            }
+            if (!limitToMimeType.isEmpty()) {
+                mFiles = filterByMimeType(mFiles, limitToMimeType);
             }
             FileSortOrder sortOrder = PreferenceManager.getSortOrder(mContext, directory);
             mFiles = sortOrder.sortCloudFiles(mFiles);
@@ -764,6 +766,18 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         for (OCFile file : files) {
             if (!file.isHidden() && !ret.contains(file)) {
+                ret.add(file);
+            }
+        }
+
+        return ret;
+    }
+
+    private List<OCFile> filterByMimeType(List<OCFile> files, String mimeType) {
+        List<OCFile> ret = new ArrayList<>();
+
+        for (OCFile file : files) {
+            if (file.isFolder() || file.getMimeType().startsWith(mimeType)) {
                 ret.add(file);
             }
         }

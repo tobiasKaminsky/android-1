@@ -323,39 +323,11 @@ public class FileOperationsHelper {
     }
 
     public void openFileAsRichDocument(OCFile file, Context context) {
-
-        // directly start activity
-
         Intent collaboraWebViewIntent = new Intent(context, RichDocumentsWebView.class);
         collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
         collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_FILE, file);
         collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
         context.startActivity(collaboraWebViewIntent);
-
-        // mFileActivity.showLoadingDialog(mFileActivity.getString(R.string.wait_a_moment));
-
-
-//        new Thread(() -> {
-//            Account account = AccountUtils.getCurrentOwnCloudAccount(mFileActivity);
-//            RichDocumentsUrlOperation richDocumentsUrlOperation = new RichDocumentsUrlOperation(file.getLocalId());
-//            RemoteOperationResult result = richDocumentsUrlOperation.execute(account, mFileActivity);
-//
-//
-//            if (!result.isSuccess()) {
-//                DisplayUtils.showSnackMessage(mFileActivity, R.string.richdocument_not_possible_headline);
-//                return;
-//            }
-//
-//            Intent collaboraWebViewIntent = new Intent(context, RichDocumentsWebView.class);
-//            String uri = (String) result.getData().get(0);
-//
-//            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
-//            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, uri);
-//            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_FILE, file);
-//            collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
-//            mFileActivity.dismissLoadingDialog();
-//            context.startActivity(collaboraWebViewIntent);
-//        }).start();
     }
 
     @NonNull

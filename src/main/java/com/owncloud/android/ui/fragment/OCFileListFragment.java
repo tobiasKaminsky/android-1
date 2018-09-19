@@ -138,6 +138,7 @@ public class OCFileListFragment extends ExtendedListFragment implements
     public final static String ARG_HIDE_FAB = MY_PACKAGE + ".HIDE_FAB";
     public final static String ARG_HIDE_ITEM_OPTIONS = MY_PACKAGE + ".HIDE_ITEM_OPTIONS";
     public final static String ARG_SEARCH_ONLY_FOLDER = MY_PACKAGE + ".SEARCH_ONLY_FOLDER";
+    public final static String ARG_MIMETYPE = MY_PACKAGE + ".MIMETYPE";
 
     public static final String DOWNLOAD_BEHAVIOUR = "DOWNLOAD_BEHAVIOUR";
     public static final String DOWNLOAD_SEND = "DOWNLOAD_SEND";
@@ -177,6 +178,7 @@ public class OCFileListFragment extends ExtendedListFragment implements
     private boolean searchFragment;
     private SearchEvent searchEvent;
     private AsyncTask remoteOperationAsyncTask;
+    private String mLimitToMimeType;
 
     private enum MenuItemAddRemove {
         DO_NOTHING, REMOVE_SORT, REMOVE_GRID_AND_SORT, ADD_SORT, ADD_GRID_AND_SORT, ADD_GRID_AND_SORT_WITH_SEARCH,
@@ -313,6 +315,7 @@ public class OCFileListFragment extends ExtendedListFragment implements
         Bundle args = getArguments();
         mOnlyFoldersClickable = args != null && args.getBoolean(ARG_ONLY_FOLDERS_CLICKABLE, false);
         mFileSelectable = (args != null) && args.getBoolean(ARG_FILE_SELECTABLE, false);
+        mLimitToMimeType = args != null ? args.getString(ARG_MIMETYPE, "") : "";
         boolean hideItemOptions = args != null && args.getBoolean(ARG_HIDE_ITEM_OPTIONS, false);
 
         mAdapter = new OCFileListAdapter(getActivity(), mContainerActivity, this, hideItemOptions,
@@ -1099,7 +1102,7 @@ public class OCFileListFragment extends ExtendedListFragment implements
                     });
                 }
 
-                mAdapter.swapDirectory(directory, storageManager, onlyOnDevice);
+                mAdapter.swapDirectory(directory, storageManager, onlyOnDevice, mLimitToMimeType);
                 if (mFile == null || !mFile.equals(directory)) {
                     getRecyclerView().scrollToPosition(0);
                 }

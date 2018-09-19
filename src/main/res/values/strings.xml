@@ -819,9 +819,8 @@
     <string name="file_rename">Rename</string>
     <string name="fab_label">Add or upload</string>
     <string name="account_creation_failed">Account creation failed</string>
-
     <string name="single_sign_on_request_token" formatted="true">Allow %1$s to access your Nextcloud account %2$s?</string>
     <string name="permission_deny">Deny</string>
     <string name="permission_allow">Allow</string>
-
+    <string name="richdocuments_failed_to_load_document">Failed to load document!</string>
 </resources>

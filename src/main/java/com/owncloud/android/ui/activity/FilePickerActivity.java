@@ -23,6 +23,7 @@ public class FilePickerActivity extends FolderPickerActivity {
         args.putBoolean(OCFileListFragment.ARG_HIDE_ITEM_OPTIONS, true);
         args.putBoolean(OCFileListFragment.ARG_SEARCH_ONLY_FOLDER, false);
         args.putBoolean(OCFileListFragment.ARG_FILE_SELECTABLE, true);
+        args.putString(OCFileListFragment.ARG_MIMETYPE, getIntent().getStringExtra(OCFileListFragment.ARG_MIMETYPE));
         listOfFiles.setArguments(args);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.add(R.id.fragment_container, listOfFiles, TAG_LIST_OF_FOLDERS);
