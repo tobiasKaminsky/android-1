@@ -616,14 +616,20 @@ public class DocumentsStorageProvider extends DocumentsProvider {
         Log.d(TAG, "isChildDocument(), parent=" + parentDocumentId + ", id=" + documentId);
 
         try {
-            Document document = toDocument(documentId);
-            Document folderDocument = toDocument(parentDocumentId);
+            Document parentFile = toDocument(parentDocumentId);
+            Document childFile = toDocument(documentId);
 
-            if (null == document || null == folderDocument) {
-                return false;
+            if (childFile.getFile().getParentId() == parentFile.getFile().getFileId()) {
+                return true;
             }
 
-            return document.getFile().getParentId() == folderDocument.getFile().getFileId();
+            OCFile currentParent = childFile.getStorageManager().getFileById(childFile.getFile().getParentId());
+            while (currentParent != null && !ROOT_PATH.equals(currentParent.getRemotePath())) {
+                if (parentFile.getFile().getRemoteId().equals(currentParent.getRemoteId())) {
+                    return true;
+                }
+                currentParent = childFile.getStorageManager().getFileById(currentParent.getParentId());
+            }
         } catch (FileNotFoundException e) {
             Log.e(TAG, "failed to check for child document", e);
         }
