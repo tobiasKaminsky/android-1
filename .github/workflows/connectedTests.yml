@@ -13,5 +13,5 @@ jobs:
               uses: actions/setup-java@v1
               with:
                   java-version: 1.8
-            - name: Android Emulator
-              uses: vgaidarji/android-github-actions-emulator@v1.0.1
+            - name: "Run UI Tests"
+              uses: faruktoptas/android-github-actions-emulator@v1.1.0
