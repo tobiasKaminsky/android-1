@@ -13,9 +13,6 @@ jobs:
             - name: Pull docker
               run: docker pull nextcloudci/android:android-49
 
-            - name: Run
-              run: docker run nextcloudci/android:android-49
-
             - name: test
               run: docker run --privileged nextcloudci/android:android-49 emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
                   docker ps
