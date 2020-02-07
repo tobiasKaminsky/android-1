@@ -8,7 +8,8 @@ jobs:
         container: nextcloudci/android:android-49
         steps:
             - uses: actions/checkout@v2
-            - run: emulator-headless -list-avds
-            - run: emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
-            - run: /home/runner/work/android-nextcloud/gradlew assembleGplay
+            - run: |
+                  emulator-headless -list-avds
+                  /home/runner/work/android-nextcloud/gradlew assembleGplay
+                  emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
               name: Run in container
