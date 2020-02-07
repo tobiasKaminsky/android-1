@@ -97,7 +97,7 @@ public class ActivitiesActivity extends FileActivity implements ActivityListInte
 
     private boolean isLoadingActivities;
 
-    private ActivitiesContract.ActionListener mActionListener;
+    ActivitiesContract.ActionListener mActionListener;
     @Inject ActivitiesRepository activitiesRepository;
     @Inject FilesRepository filesRepository;
 

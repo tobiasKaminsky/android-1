@@ -246,11 +246,11 @@ public class NotificationsActivity extends FileActivity implements Notifications
         fetchAndSetData();
     }
 
-    private void populateList(List<Notification> notifications) {
+    void populateList(List<Notification> notifications) {
         adapter.setNotificationItems(notifications);
     }
 
-    private void fetchAndSetData() {
+    void fetchAndSetData() {
         Thread t = new Thread(() -> {
             if (client == null && optionalUser.isPresent()) {
                 try {
