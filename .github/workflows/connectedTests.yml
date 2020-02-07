@@ -11,16 +11,15 @@ jobs:
             - uses: actions/checkout@v2
 
             - name: Pull docker
-              run: docker pull nextcloudci/android:android-54
+              run: docker pull nextcloudci/android:android-49
 
             - name: Run
-              run: docker run nextcloudci/android
-
-            - name: start Emulator
-              run: emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
+              run: docker run nextcloudci/android:android-49
 
             - name: test
-              run: ./gradlew assembleGplay
-                  ./gradlew assembleGplayDebug
-                  scripts/wait_for_emulator.sh
-                  ./gradlew jacocoTestGplayDebugUnitTestReport
+              run: docker run --privileged nextcloudci/android:android-49 emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
+                  id=$(docker ps | grep android | cut -f1 -d" ")
+                  docker exec -it $id ./gradlew assembleGplay
+                  docker exec -it $id ./gradlew assembleGplayDebug
+                  docker exec -it $id scripts/wait_for_emulator.sh
+                  docker exec -it $id ./gradlew jacocoTestGplayDebugUnitTestReport
