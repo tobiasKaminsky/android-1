@@ -5,7 +5,7 @@ on: [push]
 jobs:
     container:
         runs-on: ubuntu-latest
-        container: node:10.16-jessie
+        container: nextcloudci/android:android-49
         steps:
             - run: |
                   echo This job does specify a container.
