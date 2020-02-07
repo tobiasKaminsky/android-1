@@ -7,7 +7,6 @@ jobs:
         runs-on: ubuntu-latest
         container: nextcloudci/android:android-49
         steps:
-            - run: |
-                  echo This job does specify a container.
-                  echo It runs in the container instead of the VM.
+            - run: emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
+                  /home/runner/work/android-nextcloud/gradlew assembleGplay
               name: Run in container
