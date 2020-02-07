@@ -13,6 +13,7 @@ import android.os.Bundle;
 import com.facebook.testing.screenshot.Screenshot;
 import com.nextcloud.client.account.UserAccountManager;
 import com.nextcloud.client.account.UserAccountManagerImpl;
+import com.nextcloud.common.NextcloudClient;
 import com.owncloud.android.datamodel.FileDataStorageManager;
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudClientFactory;
@@ -35,6 +36,7 @@ import androidx.test.espresso.contrib.DrawerActions;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import okhttp3.Credentials;
 
 import static androidx.test.InstrumentationRegistry.getInstrumentation;
 import static androidx.test.espresso.Espresso.onView;
@@ -49,6 +51,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 public abstract class AbstractIT {
 
     protected static OwnCloudClient client;
+    protected static NextcloudClient nextcloudClient;
     protected static Account account;
     protected static Context targetContext;
 
@@ -82,6 +85,10 @@ public abstract class AbstractIT {
             }
 
             client = OwnCloudClientFactory.createOwnCloudClient(account, targetContext);
+
+            nextcloudClient = new NextcloudClient(baseUrl, targetContext);
+            nextcloudClient.credentials = Credentials.basic(loginName, password);
+            nextcloudClient.userId = loginName; // for test same as userId
 
             createDummyFiles();
 

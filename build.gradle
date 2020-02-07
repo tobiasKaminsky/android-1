@@ -380,6 +380,7 @@ dependencies {
     androidTestImplementation 'tools.fastlane:screengrab:2.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     androidTestImplementation('com.android.support.test.espresso:espresso-intents:3.0.2')
+    androidTestCompile group: 'org.mockito', name: 'mockito-android', version: '3.2.4'
 
 //    jacocoAnt "org.jacoco:org.jacoco.ant:${jacocoVersion}"
 //    jacocoAgent "org.jacoco:org.jacoco.agent:${jacocoVersion}"
