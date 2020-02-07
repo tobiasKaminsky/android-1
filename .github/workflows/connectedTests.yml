@@ -14,9 +14,6 @@ jobs:
               run: docker pull nextcloudci/android:android-49
 
             - name: test
-              run: docker run --privileged nextcloudci/android:android-49 emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
-                  docker ps
+              run: docker run --privileged nextcloudci/android:android-49 emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 & ;
+                  docker ps ;
                   docker exec -it  $(docker ps | grep android | cut -f1 -d" ") /home/runner/work/android-nextcloud/gradlew assembleGplay
-                  docker exec -it  $(docker ps | grep android | cut -f1 -d" ") ./gradlew assembleGplayDebug
-                  docker exec -it  $(docker ps | grep android | cut -f1 -d" ") scripts/wait_for_emulator.sh
-                  docker exec -it  $(docker ps | grep android | cut -f1 -d" ") ./gradlew jacocoTestGplayDebugUnitTestReport
