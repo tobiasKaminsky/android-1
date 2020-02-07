@@ -10,6 +10,6 @@ jobs:
             - uses: actions/checkout@v2
             - run: |
                   emulator-headless -list-avds
-                  /home/runner/work/android-nextcloud/gradlew assembleGplay
+                  ./gradlew assembleGplay
                   emulator-headless -avd android-27 -no-snapshot -gpu swiftshader_indirect -no-window -no-audio -skin 500x833 &
               name: Run in container
