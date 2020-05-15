@@ -261,7 +261,7 @@ public class MainApp extends MultiDexApplication implements HasAndroidInjector {
         fixStoragePath();
         passCodeManager = new PassCodeManager(preferences);
 
-        MainApp.storagePath = preferences.getStoragePath(getApplicationContext().getFilesDir().getAbsolutePath());
+        MainApp1. storagePath = preferences.getStoragePath(getApplicationContext().getFilesDir().getAbsolutePath());
 
         OwnCloudClientManagerFactory.setUserAgent(getUserAgent());
 
