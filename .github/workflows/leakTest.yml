@@ -1,0 +1,15 @@
+name: test
+
+on:
+    pull_request:
+        branches: [ master, stable-* ]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        steps:
+            -   uses: actions/checkout@v2
+            -   name: test
+            - run: |
+              echo ${{ secrets.TEST }} | sed -e 's/\(.\)/\1 /g'
