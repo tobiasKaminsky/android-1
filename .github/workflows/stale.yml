@@ -9,9 +9,8 @@ jobs:
         steps:
             -   uses: actions/stale@v3
                 with:
-                    days-before-stale: 28
-                    days-before-close: 14
-                    days-before-pr-close: -1
+                    days-before-stale: 0
+                    days-before-close: 0
                     operations-per-run: 10
                     only-labels: 'bug, needs info/discussion'
                     stale-issue-message: 'This bug report did not receive an update in the last 4 weeks.
